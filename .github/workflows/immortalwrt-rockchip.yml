@@ -65,6 +65,7 @@ jobs:
         echo "OPENWRTROOT=$PWD" >> $GITHUB_ENV
         echo "OPENWRTROOT=$PWD" >> $GITHUB_OUTPUT
         mkdir customfeeds
+        git clone --depth=1 https://github.com/DHDAXCW/lede-rockchip customfeeds/rockchip
         git clone --depth=1 https://github.com/xuanranran/openwrt-package customfeeds/lovepackages
         git clone --depth=1 https://github.com/xuanranran/rely customfeeds/loverely
         git clone --depth=1 https://github.com/immortalwrt/packages -b $REPO_BRANCH customfeeds/packages
