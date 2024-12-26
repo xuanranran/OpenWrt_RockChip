@@ -56,6 +56,7 @@ jobs:
       run: |
         df -hT $PWD
         git clone $REPO_URL -b $REPO_BRANCH openwrt
+        git clone --depth=1 https://github.com/DHDAXCW/lede-rockchip openwrt/rockchip1
         cd openwrt
         
     - name: Update Feeds
@@ -65,7 +66,6 @@ jobs:
         echo "OPENWRTROOT=$PWD" >> $GITHUB_ENV
         echo "OPENWRTROOT=$PWD" >> $GITHUB_OUTPUT
         mkdir customfeeds
-        git clone --depth=1 https://github.com/DHDAXCW/lede-rockchip rockchip
         git clone --depth=1 https://github.com/xuanranran/openwrt-package customfeeds/lovepackages
         git clone --depth=1 https://github.com/xuanranran/rely customfeeds/loverely
         git clone --depth=1 https://github.com/immortalwrt/packages -b $REPO_BRANCH customfeeds/packages
