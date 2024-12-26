@@ -176,7 +176,7 @@ jobs:
       env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-          name: ${{ steps.tag.outputs.release_date }} immortalwrt-rockchip-armv8 下载固件
+          name: ${{ steps.tag.outputs.release_date }} immortalwrt-Rockchip-ARMv8
           tag_name: ${{ steps.tag.outputs.release_tag }}
           body_path: release.txt
           files: ${{ env.FIRMWARE }}/*
