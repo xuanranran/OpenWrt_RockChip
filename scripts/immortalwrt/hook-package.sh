@@ -40,9 +40,9 @@ git clone https://github.com/sbwml/packages_utils_containerd customfeeds/package
 git clone https://github.com/sbwml/packages_utils_runc customfeeds/packages/utils/runc
 sed -i '/sysctl.d/d' customfeeds/packages/utils/dockerd/Makefile
 pushd customfeeds/packages
-curl -s https://raw.githubusercontent.com/sbwml/r4s_build_script/refs/heads/master//openwrt/patch/docker/0001-dockerd-fix-bridge-network.patch | patch -p1
-curl -s https://raw.githubusercontent.com/sbwml/r4s_build_script/refs/heads/master//openwrt/patch/docker/0002-docker-add-buildkit-experimental-support.patch | patch -p1
-curl -s https://raw.githubusercontent.com/sbwml/r4s_build_script/refs/heads/master//openwrt/patch/docker/0003-dockerd-disable-ip6tables-for-bridge-network-by-defa.patch | patch -p1
+curl -s https://raw.githubusercontent.com/sbwml/r4s_build_script/refs/heads/master/openwrt/patch/docker/0001-dockerd-fix-bridge-network.patch | patch -p1
+curl -s https://raw.githubusercontent.com/sbwml/r4s_build_script/refs/heads/master/openwrt/patch/docker/0002-docker-add-buildkit-experimental-support.patch | patch -p1
+curl -s https://raw.githubusercontent.com/sbwml/r4s_build_script/refs/heads/master/openwrt/patch/docker/0003-dockerd-disable-ip6tables-for-bridge-network-by-defa.patch | patch -p1
 popd
 
 # samba4 - bump version
