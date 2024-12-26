@@ -68,6 +68,7 @@ pushd customfeeds/luci/applications/
 git clone --depth 1 https://github.com/openwrt/luci openwrt_package-manager && mv -n openwrt_package-manager/applications/luci-app-package-manager ./ ; rm -rf openwrt_package-manager
 popd
 
+rm -rf package/emortal/cpufreq
 rm -rf package/boot/uboot-rockchip
 cp -a customfeeds/rockchip/package/boot/uboot-rockchip package/boot/uboot-rockchip
 rm -rf target/linux/rockchip
