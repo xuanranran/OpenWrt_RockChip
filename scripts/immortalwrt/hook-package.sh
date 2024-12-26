@@ -70,8 +70,8 @@ popd
 
 rm -rf package/emortal/cpufreq
 rm -rf package/boot/uboot-rockchip/*
-cp -f $GITHUB_WORKSPACE/openwrt/customfeeds/rockchip/package/boot/uboot-rockchip/* package/boot/uboot-rockchip/
+cp -f customfeeds/rockchip/package/boot/uboot-rockchip/* package/boot/uboot-rockchip/
 rm -rf target/linux/rockchip/*
-cp -f $GITHUB_WORKSPACE/openwrt/customfeeds/rockchip/target/linux/rockchip/* target/linux/rockchip/
+cp -f customfeeds/rockchip/target/linux/rockchip/* target/linux/rockchip/
 
 
