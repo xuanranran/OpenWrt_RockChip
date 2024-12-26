@@ -69,9 +69,5 @@ git clone --depth 1 https://github.com/openwrt/luci openwrt_package-manager && m
 popd
 
 rm -rf package/emortal/cpufreq
-rm -rf package/boot/uboot-rockchip/*
-cp -a rockchip1/package/boot/uboot-rockchip/* package/boot/uboot-rockchip/
-rm -rf target/linux/rockchip/*
-cp -a rockchip1/target/linux/rockchip/* target/linux/rockchip/
 
 
