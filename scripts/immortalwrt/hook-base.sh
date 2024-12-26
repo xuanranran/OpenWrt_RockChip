@@ -15,7 +15,7 @@ rm -rf package/utils/util-linux
 git clone https://github.com/sbwml/package_utils_util-linux -b openwrt-24.10 package/utils/util-linux
 
 # Shortcut Forwarding Engine
-git clone https://git.cooluc.com/sbwml/shortcut-fe package/new/shortcut-fe
+# git clone https://git.cooluc.com/sbwml/shortcut-fe package/new/shortcut-fe
 
 # FullCone module
 # git clone https://git.cooluc.com/sbwml/nft-fullcone package/new/nft-fullcone
