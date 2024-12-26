@@ -38,7 +38,6 @@ git clone https://github.com/sbwml/packages_utils_docker customfeeds/packages/ut
 git clone https://github.com/sbwml/packages_utils_dockerd customfeeds/packages/utils/dockerd
 git clone https://github.com/sbwml/packages_utils_containerd customfeeds/packages/utils/containerd
 git clone https://github.com/sbwml/packages_utils_runc customfeeds/packages/utils/runc
-fi
 sed -i '/sysctl.d/d' customfeeds/packages/utils/dockerd/Makefile
 pushd customfeeds/packages
 curl -s https://raw.githubusercontent.com/sbwml/r4s_build_script/refs/heads/master//openwrt/patch/docker/0001-dockerd-fix-bridge-network.patch | patch -p1
