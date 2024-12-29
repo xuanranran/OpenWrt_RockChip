@@ -3,9 +3,6 @@
 
 curl -s https://raw.githubusercontent.com/sbwml/r4s_build_script/eaffad42affacc728db2a3dce3378220236f56f9/openwrt/patch/generic/0007-kernel-Add-support-for-llvm-clang-compiler.patch | patch -p1
 
-# x86 - disable mitigations
-sed -i 's/noinitrd/noinitrd mitigations=off/g' target/linux/x86/image/grub-efi.cfg
-
 # openssl - quictls
 rm -rf package/libs/openssl
 cp -r $GITHUB_WORKSPACE/data/openwrt-23.05/package/libs/openssl package/libs/openssl
