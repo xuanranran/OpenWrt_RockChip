@@ -72,10 +72,10 @@ jobs:
         git clone --depth=1 https://github.com/coolsnowwolf/routing customfeeds/routing
         git clone --depth=1 https://github.com/coolsnowwolf/telephony customfeeds/telephony
         chmod +x ../scripts/*.sh
-        chmod +x ../scripts/openwrt/*.sh
-        ../scripts/openwrt/hook-package.sh
-        ../scripts/openwrt/hook-base.sh
-        ../scripts/openwrt/hook-feeds.sh
+        chmod +x ../scripts/lean/*.sh
+        ../scripts/lean/hook-package.sh
+        ../scripts/lean/hook-base.sh
+        ../scripts/lean/hook-feeds.sh
         
     - name: Install Feeds
       run: |
