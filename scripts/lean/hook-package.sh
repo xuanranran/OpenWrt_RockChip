@@ -13,26 +13,12 @@ rm -rf customfeeds/luci/themes/luci-theme-argon
 rm -rf customfeeds/packages/net/{*alist,chinadns-ng,dns2socks,dns2tcp,lucky,sing-box}
 # chmod 755 customfeeds/lovepackages/luci-app-onliner/root/usr/share/onliner/setnlbw.sh
 
-# Update applications/luci-app-firewall
-# rm -rf customfeeds/luci/applications/luci-app-firewall
-# cp -r $GITHUB_WORKSPACE/data/luci/applications/luci-app-firewall customfeeds/luci/applications/luci-app-firewall
-
-# rm -rf package/kernel/linux/modules/netsupport.mk
-# cp -r $GITHUB_WORKSPACE/data/package/kernel/linux/modules/netsupport.mk package/kernel/linux/modules/netsupport.mk
-
-# luci-app-turboacc
-# sed -i 's/kmod-tcp-bbr/kmod-tcp-bbr3/g' customfeeds/luci/applications/luci-app-turboacc/Makefile
-
 # xdp-tools
 cp -r $GITHUB_WORKSPACE/data/package/network/utils/xdp-tools package/network/utils/xdp-tools
 
 # uqmi
 rm -rf package/network/utils/uqmi
 cp -r $GITHUB_WORKSPACE/data/package/network/utils/uqmi package/network/utils/uqmi
-
-# uwsgi - bump version
-# rm -rf customfeeds/packages/net/uwsgi
-# cp -r $GITHUB_WORKSPACE/data/packages-master/net/uwsgi customfeeds/packages/net/uwsgi
 
 # Update node 20.x
 rm -rf customfeeds/packages/lang/node
@@ -48,15 +34,6 @@ popd
 rm -rf customfeeds/packages/utils/unzip
 git clone https://github.com/sbwml/feeds_packages_utils_unzip customfeeds/packages/utils/unzip
 
-# tcp-brutal
-# git clone https://github.com/sbwml/package_kernel_tcp-brutal package/kernel/tcp-brutal
-
-# Update nginx-util
-# rm -rf customfeeds/packages/net/nginx-util/*
-# pushd customfeeds/packages/net/nginx-util/
-# git clone --depth 1 https://github.com/immortalwrt/packages nginxutil && mv -n nginxutil/net/nginx-util/* ./ ; rm -rf nginxutil
-# popd
-
 # Update golang 1.23.x
 rm -rf customfeeds/packages/lang/golang
 git clone https://github.com/sbwml/packages_lang_golang customfeeds/packages/lang/golang
@@ -67,22 +44,6 @@ rm -rf toolchain/gcc/*
 pushd toolchain/gcc/
 git clone --depth 1 https://github.com/immortalwrt/immortalwrt gcc && mv -n gcc/toolchain/gcc/* ./ ; rm -rf gcc
 popd
-
-
-# Update iproute2
-# rm -rf package/network/utils/iproute2
-# pushd package/network/utils/
-# git clone --depth 1 https://github.com/sbwml/package_network_utils_iproute2 iproute2
-# popd
-
-# apk-tools
-# curl -s https://init2.cooluc.com/openwrt/patch/apk-tools/9999-hack-for-linux-pre-releases.patch > package/system/apk/patches/9999-hack-for-linux-pre-releases.patch
-
-# ddns - fix boot
-# sed -i '/boot()/,+2d' customfeeds/packages/net/ddns-scripts/files/ddns.init
-
-# nlbwmon - disable syslog
-# sed -i 's/stderr 1/stderr 0/g' customfeeds/packages/net/nlbwmon/files/nlbwmon.init
 
 # samba4 - bump version
 rm -rf customfeeds/packages/net/samba4
@@ -111,27 +72,8 @@ pushd customfeeds/luci
 curl -s https://raw.githubusercontent.com/xuanranran/r4s_build_script/refs/heads/master/openwrt/patch/luci/applications/luci-app-natmap/0001-luci-app-natmap-add-default-STUN-server-lists.patch | patch -p1
 popd
 
-# Realtek driver - R8168 & R8125 & R8126 & R8152 & R8101
-# rm -rf package/kernel/r8168 package/kernel/r8101 package/kernel/r8125 package/kernel/r8126
-# git clone https://github.com/sbwml/package_kernel_r8168 package/kernel/r8168
-# git clone https://github.com/sbwml/package_kernel_r8152 package/kernel/r8152
-# git clone https://github.com/sbwml/package_kernel_r8101 package/kernel/r8101
-# git clone https://github.com/sbwml/package_kernel_r8125 package/kernel/r8125
-# git clone https://github.com/sbwml/package_kernel_r8126 package/kernel/r8126
-
-# UPnP
-# rm -rf customfeeds/{packages/net/miniupnpd,luci/applications/luci-app-upnp}
-# git clone https://git.cooluc.com/sbwml/miniupnpd customfeeds/packages/net/miniupnpd -b v2.3.7
-# git clone https://git.cooluc.com/sbwml/luci-app-upnp customfeeds/luci/applications/luci-app-upnp -b main
-
 # procps-ng - top
 rm -rf customfeeds/packages/utils/procps-ng
 cp -r $GITHUB_WORKSPACE/data/packages-master/utils/procps-ng customfeeds/packages/utils/procps-ng
 sed -i 's/enable-skill/enable-skill --disable-modern-top/g' customfeeds/packages/utils/procps-ng/Makefile
-
-# 替换杂项
-# rm -rf customfeeds/packages/libs/gnutls
-# pushd customfeeds/packages/libs/
-# git clone --depth 1 https://github.com/immortalwrt/packages immortalwrt_gnutls && mv -n immortalwrt_gnutls/libs/gnutls ./ ; rm -rf immortalwrt_gnutls
-# popd
 
