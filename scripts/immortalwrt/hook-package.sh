@@ -27,21 +27,6 @@ git clone https://github.com/sbwml/packages_lang_golang customfeeds/packages/lan
 # rm -rf customfeeds/packages/utils/lrzsz
 # git clone https://github.com/sbwml/packages_utils_lrzsz package/new/lrzsz
 
-# Docker
-rm -rf customfeeds/luci/applications/luci-app-dockerman
-git clone https://git.cooluc.com/sbwml/luci-app-dockerman -b openwrt-24.10 customfeeds/luci/applications/luci-app-dockerman
-rm -rf customfeeds/packages/utils/{docker,dockerd,containerd,runc}
-git clone https://github.com/sbwml/packages_utils_docker customfeeds/packages/utils/docker
-git clone https://github.com/sbwml/packages_utils_dockerd customfeeds/packages/utils/dockerd
-git clone https://github.com/sbwml/packages_utils_containerd customfeeds/packages/utils/containerd
-git clone https://github.com/sbwml/packages_utils_runc customfeeds/packages/utils/runc
-sed -i '/sysctl.d/d' customfeeds/packages/utils/dockerd/Makefile
-pushd customfeeds/packages
-curl -s https://raw.githubusercontent.com/sbwml/r4s_build_script/refs/heads/master/openwrt/patch/docker/0001-dockerd-fix-bridge-network.patch | patch -p1
-curl -s https://raw.githubusercontent.com/sbwml/r4s_build_script/refs/heads/master/openwrt/patch/docker/0002-docker-add-buildkit-experimental-support.patch | patch -p1
-curl -s https://raw.githubusercontent.com/sbwml/r4s_build_script/refs/heads/master/openwrt/patch/docker/0003-dockerd-disable-ip6tables-for-bridge-network-by-defa.patch | patch -p1
-popd
-
 # samba4 - bump version
 rm -rf customfeeds/packages/net/samba4
 git clone https://github.com/sbwml/feeds_packages_net_samba4 customfeeds/packages/net/samba4
