@@ -17,23 +17,19 @@ rm -rf customfeeds/packages/net/shadowsocks-libev
 rm -rf customfeeds/packages/net/{*alist,chinadns-ng,dns2socks,dns2tcp,lucky,sing-box}
 # chmod 755 customfeeds/lovepackages/luci-app-onliner/root/usr/share/onliner/setnlbw.sh
 
-sed -i 's/video,+libmesa +libwayland +libgudev/video,+libgudev/g' customfeeds/packages/multimedia/gst1-plugins-base/Makefile
-sed -i 's/controller,,+libgraphene +libjpeg +libpng/controller,,+libjpeg +libpng/g' customfeeds/packages/multimedia/gst1-plugins-base/Makefile
-
-sed -i 's/1.14.1/1.14.2/g' customfeeds/packages/net/zerotier/Makefile
-sed -i 's/4f9f40b27c5a78389ed3f3216c850921f6298749e5819e9f2edabb2672ce9ca0/c2f64339fccf5148a7af089b896678d655fbfccac52ddce7714314a59d7bddbb/g' customfeeds/packages/net/zerotier/Makefile
+# sed -i 's/1.14.1/1.14.2/g' customfeeds/packages/net/zerotier/Makefile
+# sed -i 's/4f9f40b27c5a78389ed3f3216c850921f6298749e5819e9f2edabb2672ce9ca0/c2f64339fccf5148a7af089b896678d655fbfccac52ddce7714314a59d7bddbb/g' customfeeds/packages/net/zerotier/Makefile
 
 # Update golang 1.23.x
 rm -rf customfeeds/packages/lang/golang
 git clone https://github.com/sbwml/packages_lang_golang customfeeds/packages/lang/golang
-# git clone https://github.com/sbwml/packages_lang_golang -b 23.x customfeeds/packages/lang/golang
 
 # rm -rf customfeeds/packages/utils/lrzsz
 # git clone https://github.com/sbwml/packages_utils_lrzsz package/new/lrzsz
 
 # Docker
 rm -rf customfeeds/luci/applications/luci-app-dockerman
-git clone https://git.cooluc.com/sbwml/luci-app-dockerman -b openwrt-23.05 customfeeds/luci/applications/luci-app-dockerman
+git clone https://git.cooluc.com/sbwml/luci-app-dockerman -b openwrt-24.10 customfeeds/luci/applications/luci-app-dockerman
 rm -rf customfeeds/packages/utils/{docker,dockerd,containerd,runc}
 git clone https://github.com/sbwml/packages_utils_docker customfeeds/packages/utils/docker
 git clone https://github.com/sbwml/packages_utils_dockerd customfeeds/packages/utils/dockerd
