@@ -90,7 +90,7 @@ jobs:
         cd $OPENWRTROOT
         ../$DIY_SH
         ../scripts/preset-clash-core.sh arm64
-        ../scripts/preset-mihomo-core.sh
+        ../scripts/preset-nikki-core.sh
         ../scripts/preset-terminal-tools.sh
         make defconfig
         
