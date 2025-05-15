@@ -180,3 +180,6 @@ git clone https://github.com/sbwml/kmod_packages_net_coova-chilli customfeeds/pa
 
 # watchcat - clean config
 # true > customfeeds/packages/utils/watchcat/files/watchcat.config
+
+# libsodium - fix build with lto (GNU BUG - 89147)
+sed -i "/CONFIGURE_ARGS/i\TARGET_CFLAGS += -ffat-lto-objects\n" customfeeds/packages/libs/libsodium/Makefile

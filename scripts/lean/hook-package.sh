@@ -74,3 +74,8 @@ rm -rf customfeeds/packages/utils/procps-ng
 cp -r $GITHUB_WORKSPACE/data/packages-master/utils/procps-ng customfeeds/packages/utils/procps-ng
 sed -i 's/enable-skill/enable-skill --disable-modern-top/g' customfeeds/packages/utils/procps-ng/Makefile
 
+# mbedtls
+pushd package/libs
+rm -rf mbedtls
+git clone --depth 1 https://github.com/immortalwrt/immortalwrt mbedtls && mv -n mbedtls/package/libs/mbedtls ./ ; rm -rf mbedtls
+popd
