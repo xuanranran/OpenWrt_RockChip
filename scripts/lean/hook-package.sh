@@ -11,6 +11,7 @@ rm -rf package/lean/{*ddns-scripts_aliyun,ddns-scripts_dnspod}
 rm -rf customfeeds/luci/applications/{luci-app-filebrowser,luci-app-argon-config}
 rm -rf customfeeds/luci/themes/luci-theme-argon
 rm -rf customfeeds/packages/net/{*alist,chinadns-ng,dns2socks,dns2tcp,lucky,sing-box}
+rm -rf customfeeds/lovepackages/shadowsocks-libev
 # chmod 755 customfeeds/lovepackages/luci-app-onliner/root/usr/share/onliner/setnlbw.sh
 
 # uqmi
