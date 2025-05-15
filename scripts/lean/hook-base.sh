@@ -1,9 +1,6 @@
 #!/bin/bash
 # Set to local prepare
 
-curl -s https://raw.githubusercontent.com/sbwml/r4s_build_script/refs/heads/master/openwrt/patch/generic-24.10/0001-tools-add-upx-tools.patch | patch -p1
-rm -rf package/lean/upx
-
 curl -s https://raw.githubusercontent.com/sbwml/r4s_build_script/eaffad42affacc728db2a3dce3378220236f56f9/openwrt/patch/generic/0007-kernel-Add-support-for-llvm-clang-compiler.patch | patch -p1
 
 # openssl - quictls
@@ -60,8 +57,8 @@ popd
 sed -i "/-openwrt/iOPENSSL_OPTIONS += enable-ktls '-DDEVRANDOM=\"\\\\\"/dev/urandom\\\\\"\"\'\n" package/libs/openssl/Makefile
 
 # openssl - lto
-sed -i "s/ no-lto//g" package/libs/openssl/Makefile
-sed -i "/TARGET_CFLAGS +=/ s/\$/ -ffat-lto-objects/" package/libs/openssl/Makefile
+# sed -i "s/ no-lto//g" package/libs/openssl/Makefile
+# sed -i "/TARGET_CFLAGS +=/ s/\$/ -ffat-lto-objects/" package/libs/openssl/Makefile
 
 # haproxy - fix build with quictls
 sed -i '/USE_QUIC_OPENSSL_COMPAT/d' customfeeds/packages/net/haproxy/Makefile
@@ -77,25 +74,6 @@ git clone https://github.com/sbwml/package_libs_ngtcp2 customfeeds/packages/libs
 # curl - fix passwall `time_pretransfer` check
 rm -rf customfeeds/packages/net/curl
 git clone https://github.com/sbwml/feeds_packages_net_curl customfeeds/packages/net/curl
-
-# Docker
-# rm -rf customfeeds/luci/applications/luci-app-dockerman
-# git clone https://git.cooluc.com/sbwml/luci-app-dockerman -b openwrt-23.05 customfeeds/luci/applications/luci-app-dockerman
-# rm -rf customfeeds/packages/utils/{docker,dockerd,containerd,runc}
-# git clone https://github.com/sbwml/packages_utils_docker customfeeds/packages/utils/docker
-# git clone https://github.com/sbwml/packages_utils_dockerd customfeeds/packages/utils/dockerd
-# git clone https://github.com/sbwml/packages_utils_containerd customfeeds/packages/utils/containerd
-# git clone https://github.com/sbwml/packages_utils_runc customfeeds/packages/utils/runc
-
-# rm -rf customfeeds/packages/utils/docker-compose
-# cp -r $GITHUB_WORKSPACE/data/packages-master/utils/docker-compose customfeeds/packages/utils/docker-compose
-
-# sed -i '/sysctl.d/d' customfeeds/packages/utils/dockerd/Makefile
-# pushd customfeeds/packages
-# curl -s https://raw.githubusercontent.com/xuanranran/r4s_build_script/refs/heads/master/openwrt/patch/docker/0001-dockerd-fix-bridge-network.patch | patch -p1
-# curl -s https://raw.githubusercontent.com/xuanranran/r4s_build_script/refs/heads/master/openwrt/patch/docker/0002-docker-add-buildkit-experimental-support.patch | patch -p1
-# curl -s https://raw.githubusercontent.com/xuanranran/r4s_build_script/refs/heads/master/openwrt/patch/docker/0003-dockerd-disable-ip6tables-for-bridge-network-by-defa.patch | patch -p1
-# popd
 
 # TTYD
 sed -i 's/services/system/g' customfeeds/luci/applications/luci-app-ttyd/root/usr/share/luci/menu.d/luci-app-ttyd.json
@@ -184,5 +162,3 @@ git clone https://github.com/sbwml/kmod_packages_net_coova-chilli customfeeds/pa
 # watchcat - clean config
 # true > customfeeds/packages/utils/watchcat/files/watchcat.config
 
-# libsodium - fix build with lto (GNU BUG - 89147)
-sed -i "/CONFIGURE_ARGS/i\TARGET_CFLAGS += -ffat-lto-objects\n" customfeeds/packages/libs/libsodium/Makefile
