@@ -77,5 +77,5 @@ sed -i 's/enable-skill/enable-skill --disable-modern-top/g' customfeeds/packages
 # mbedtls
 pushd package/libs
 rm -rf mbedtls
-git clone --depth 1 https://github.com/immortalwrt/immortalwrt mbedtls && mv -n mbedtls/package/libs/mbedtls ./ ; rm -rf mbedtls
+git clone --depth 1 https://github.com/immortalwrt/immortalwrt immortalwrt_mbedtls && mv -n immortalwrt_mbedtls/package/libs/mbedtls ./ ; rm -rf immortalwrt_mbedtls
 popd
