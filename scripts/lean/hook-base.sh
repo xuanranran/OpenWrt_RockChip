@@ -1,6 +1,9 @@
 #!/bin/bash
 # Set to local prepare
 
+curl -s https://raw.githubusercontent.com/sbwml/r4s_build_script/refs/heads/master/openwrt/patch/generic-24.10/0001-tools-add-upx-tools.patch | patch -p1
+rm -rf package/lean/upx
+
 curl -s https://raw.githubusercontent.com/sbwml/r4s_build_script/eaffad42affacc728db2a3dce3378220236f56f9/openwrt/patch/generic/0007-kernel-Add-support-for-llvm-clang-compiler.patch | patch -p1
 
 # openssl - quictls
