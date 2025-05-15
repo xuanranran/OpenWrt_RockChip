@@ -34,13 +34,6 @@ git clone https://github.com/sbwml/feeds_packages_utils_unzip customfeeds/packag
 # Update golang 1.23.x
 rm -rf customfeeds/packages/lang/golang
 git clone https://github.com/sbwml/packages_lang_golang customfeeds/packages/lang/golang
-# git clone https://github.com/sbwml/packages_lang_golang -b 23.x customfeeds/packages/lang/golang
-
-# Update GCC 13.3.0
-rm -rf toolchain/gcc/*
-pushd toolchain/gcc/
-git clone --depth 1 https://github.com/immortalwrt/immortalwrt gcc && mv -n gcc/toolchain/gcc/* ./ ; rm -rf gcc
-popd
 
 # samba4 - bump version
 rm -rf customfeeds/packages/net/samba4
@@ -73,9 +66,3 @@ popd
 rm -rf customfeeds/packages/utils/procps-ng
 cp -r $GITHUB_WORKSPACE/data/packages-master/utils/procps-ng customfeeds/packages/utils/procps-ng
 sed -i 's/enable-skill/enable-skill --disable-modern-top/g' customfeeds/packages/utils/procps-ng/Makefile
-
-# mbedtls
-pushd package/libs
-rm -rf mbedtls
-git clone --depth 1 https://github.com/immortalwrt/immortalwrt immortalwrt_mbedtls && mv -n immortalwrt_mbedtls/package/libs/mbedtls ./ ; rm -rf immortalwrt_mbedtls
-popd
