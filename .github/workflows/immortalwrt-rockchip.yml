@@ -73,7 +73,8 @@ jobs:
         git clone --depth=1 https://github.com/openwrt/telephony -b $REPO_BRANCH customfeeds/telephony
         chmod +x ../scripts/*.sh
         chmod +x ../scripts/immortalwrt/*.sh
-        ../scripts/immortalwrt/hook-package.sh
+        ../scripts/immortalwrt/hook-package00.sh
+        ../scripts/immortalwrt/hook-package01.sh
         ../scripts/immortalwrt/hook-base.sh
         ../scripts/immortalwrt/hook-feeds.sh
         

@@ -73,7 +73,8 @@ jobs:
         git clone --depth=1 https://github.com/openwrt/telephony -b $REPO_BRANCH customfeeds/telephony
         chmod +x ../scripts/*.sh
         chmod +x ../scripts/immortalwrt/*.sh
-        ../scripts/immortalwrt/hook-package.sh
+        ../scripts/immortalwrt/hook-package00.sh
+        ../scripts/immortalwrt/hook-package01.sh
         ../scripts/immortalwrt/hook-base.sh
         ../scripts/immortalwrt/hook-feeds.sh
         
@@ -112,8 +113,7 @@ jobs:
       run: |
         cd $OPENWRTROOT
         cat .config
-        make download -j100
-        make download -j10
+        make download -j$(nproc)
         find dl -size -1024c -exec ls -l {} \;
         find dl -size -1024c -exec rm -f {} \;
   
@@ -123,9 +123,9 @@ jobs:
         cd $OPENWRTROOT
         export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
         echo -e "$(nproc) thread compile"
-        make tools/compile -j$(nproc) || make tools/compile -j$(nproc)
-        make toolchain/compile -j$(nproc) || make toolchain/compile -j$(nproc)
-        make target/compile -j$(nproc) || make target/compile -j$(nproc) IGNORE_ERRORS=1
+        make tools/compile -j$(nproc) || make tools/compile -j$(nproc) || make tools/compile -j1 IGNORE_ERRORS=1 V=s
+        make toolchain/compile -j$(nproc) || make toolchain/compile -j$(nproc) || make toolchain/compile -j1 IGNORE_ERRORS=1 V=s
+        make target/compile -j$(nproc) || make target/compile -j$(nproc) IGNORE_ERRORS=1 || make target/compile -j1 IGNORE_ERRORS=1 V=s
         make diffconfig
         make package/compile -j$(nproc) IGNORE_ERRORS=1 || make package/compile -j$(nproc) IGNORE_ERRORS=1
         make package/index
