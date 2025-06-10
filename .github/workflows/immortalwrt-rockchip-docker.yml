@@ -152,6 +152,7 @@ jobs:
         rm -rf *ext4* *.manifest packages *.json *.buildinfo
         for file in immortalwrt-*-*.img.gz; do
             mv "$file" "docker-$file"
+        done
         popd
         make checksum
         echo "GENERATE_STATUS=success" >> $GITHUB_OUTPUT
