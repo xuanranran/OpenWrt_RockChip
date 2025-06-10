@@ -17,8 +17,11 @@ rm -rf customfeeds/packages/net/shadowsocks-libev
 rm -rf customfeeds/packages/net/{*alist,chinadns-ng,dns2socks,dns2tcp,lucky,sing-box}
 # chmod 755 customfeeds/lovepackages/luci-app-onliner/root/usr/share/onliner/setnlbw.sh
 
-# sed -i 's/1.14.1/1.14.2/g' customfeeds/packages/net/zerotier/Makefile
-# sed -i 's/4f9f40b27c5a78389ed3f3216c850921f6298749e5819e9f2edabb2672ce9ca0/c2f64339fccf5148a7af089b896678d655fbfccac52ddce7714314a59d7bddbb/g' customfeeds/packages/net/zerotier/Makefile
+# ZeroTier
+sed -i 's/1.14.1/1.14.2/g' customfeeds/packages/net/zerotier/Makefile
+sed -i 's/4f9f40b27c5a78389ed3f3216c850921f6298749e5819e9f2edabb2672ce9ca0/c2f64339fccf5148a7af089b896678d655fbfccac52ddce7714314a59d7bddbb/g' customfeeds/packages/net/zerotier/Makefile
+
+curl -s https://raw.githubusercontent.com/jjm2473/packages/refs/heads/zerotier-fix-miniupnp-path/net/zerotier/patches/0007-fix-system-include-path.patch > customfeeds/packages/net/zerotier/patches/0007-fix-system-include-path.patch
 
 # Update golang
 rm -rf customfeeds/packages/lang/golang
@@ -76,3 +79,7 @@ git clone https://github.com/sbwml/kmod_packages_net_coova-chilli customfeeds/pa
 # 替换杂项
 
 rm -rf package/emortal/cpufreq
+
+# libxcrypt
+mkdir -p customfeeds/packages/libs/libxcrypt
+curl -s https://raw.githubusercontent.com/openwrt/openwrt/refs/heads/main/package/libs/xcrypt/Makefile > customfeeds/packages/libs/libxcrypt/Makefile
