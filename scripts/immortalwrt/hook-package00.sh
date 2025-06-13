@@ -77,3 +77,7 @@ git clone https://github.com/sbwml/kmod_packages_net_coova-chilli customfeeds/pa
 # 替换杂项
 
 rm -rf package/emortal/cpufreq
+
+# libxcrypt
+mkdir -p customfeeds/packages/libs/libxcrypt
+curl -s https://raw.githubusercontent.com/openwrt/openwrt/refs/heads/main/package/libs/xcrypt/Makefile > customfeeds/packages/libs/libxcrypt/Makefile
