@@ -43,8 +43,8 @@ sed -i 's/0666/0644/g;s/0777/0755/g' customfeeds/packages/net/samba4/files/samba
 sed -i 's/0666/0644/g;s/0777/0755/g' customfeeds/packages/net/samba4/files/smb.conf.template
 
 # luci-app-sqm
-rm -rf customfeeds/luci/applications/luci-app-sqm
-git clone https://git.cooluc.com/sbwml/luci-app-sqm customfeeds/luci/applications/luci-app-sqm
+# rm -rf customfeeds/luci/applications/luci-app-sqm
+# git clone https://git.cooluc.com/sbwml/luci-app-sqm customfeeds/luci/applications/luci-app-sqm
 
 # procps-ng - top
 sed -i 's/enable-skill/enable-skill --disable-modern-top/g' customfeeds/packages/utils/procps-ng/Makefile
