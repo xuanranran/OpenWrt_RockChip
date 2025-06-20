@@ -82,4 +82,4 @@ rm -rf package/emortal/cpufreq
 mkdir -p customfeeds/packages/libs/libxcrypt
 curl -s https://raw.githubusercontent.com/openwrt/openwrt/refs/heads/main/package/libs/xcrypt/Makefile > customfeeds/packages/libs/libxcrypt/Makefile
 
-sed -i 's/--set=llvm\.download-ci-llvm=true/--set=llvm.download-ci-llvm=false/' customfeeds/packages/lang/rust/Makefile
+# sed -i 's/--set=llvm\.download-ci-llvm=true/--set=llvm.download-ci-llvm=false/' customfeeds/packages/lang/rust/Makefile
