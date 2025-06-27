@@ -32,7 +32,7 @@ xunlong_orangepi-5-plus
 - 刷机方法请参考dn2刷机 https://github.com/xuanranran/OpenWrt_RockChip/blob/master/data/emmc.md
 
 ### 固件展示
-<img width="1304" alt="image" src="scripts/1.png?raw=true">
+ ![Alt text](scripts/1.png?raw=true "Title")
 
 ### 特别提示 [![](https://img.shields.io/badge/-个人免责声明-FFFFFF.svg)](#特别提示-)
 
