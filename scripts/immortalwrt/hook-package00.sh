@@ -15,7 +15,6 @@ rm -rf customfeeds/luci/themes/luci-theme-argon
 rm -rf customfeeds/packages/net/shadowsocks-libev
 
 rm -rf customfeeds/packages/net/{*alist,chinadns-ng,dns2socks,dns2tcp,lucky,sing-box}
-# chmod 755 customfeeds/lovepackages/luci-app-onliner/root/usr/share/onliner/setnlbw.sh
 
 # ZeroTier
 sed -i 's/1.14.1/1.14.2/g' customfeeds/packages/net/zerotier/Makefile
@@ -53,11 +52,6 @@ sed -i 's/enable-skill/enable-skill --disable-modern-top/g' customfeeds/packages
 rm -rf package/network/utils/xdp-tools
 git clone --depth 1 https://github.com/sbwml/package_network_utils_xdp-tools package/network/utils/xdp-tools
 
-# nat46
-# mkdir -p package/kernel/nat46/patches
-# curl -s https://raw.githubusercontent.com/sbwml/r4s_build_script/refs/heads/master/openwrt/patch/packages-patches/nat46/100-fix-build-with-kernel-6.9.patch > package/kernel/nat46/patches/100-fix-build-with-kernel-6.9.patch
-# curl -s https://raw.githubusercontent.com/sbwml/r4s_build_script/refs/heads/master/openwrt/patch/packages-patches/nat46/101-fix-build-with-kernel-6.12.patch > package/kernel/nat46/patches/101-fix-build-with-kernel-6.12.patch
-
 # clang
 # xtables-addons module
 rm -rf customfeeds/packages/net/xtables-addons
@@ -81,6 +75,9 @@ rm -rf package/emortal/cpufreq
 # libxcrypt
 mkdir -p customfeeds/packages/libs/libxcrypt
 curl -s https://raw.githubusercontent.com/openwrt/openwrt/a461f53bfdff14341bf84ba4221daeedea3f74bb/package/libs/xcrypt/Makefile > customfeeds/packages/libs/libxcrypt/Makefile
+# curl -s https://raw.githubusercontent.com/openwrt/openwrt/a461f53bfdff14341bf84ba4221daeedea3f74bb/package/libs/xcrypt/Makefile > package/libs/xcrypt/Makefile
+
+sed -i 's/xcrypt/libxcrypt/g' customfeeds/packages/utils/shadow/Makefile
 
 # del mqttled
 rm -rf customfeeds/packages/utils/mqttled
