@@ -98,5 +98,8 @@ source $ZSH/oh-my-zsh.sh
 # alias zshconfig="mate ~/.zshrc"
 # alias ohmyzsh="mate ~/.oh-my-zsh"
 
-autoload -U compinit && compinit
-cat /etc/banner
+# 确保 Zsh 补全系统正确、安全地初始化
+autoload -U compinit
+compinit -i
+
+# cat /etc/banner
