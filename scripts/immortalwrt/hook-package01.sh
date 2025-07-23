@@ -1,6 +1,13 @@
 #!/bin/bash
 # Set to local prepare
 
+# Add nanopi-r76s
+curl -s https://raw.githubusercontent.com/xuanranran/immortalwrt/refs/heads/master/package/boot/arm-trusted-firmware-rockchip/atf-version.mk > package/boot/arm-trusted-firmware-rockchip/atf-version.mk
+curl -s https://github.com/xuanranran/immortalwrt/raw/master/package/boot/arm-trusted-firmware-rockchip/src/bin/rk35/rk3576_bl31_v2.13.0.elf > package/boot/arm-trusted-firmware-rockchip/src/bin/rk35/rk3576_bl31_v2.13.0.elf
+curl -s https://github.com/xuanranran/immortalwrt/raw/master/package/boot/arm-trusted-firmware-rockchip/src/bin/rk35/rk3576_ddr_lp4_1866MHz_lp5_2736MHz_v1.09.bin > package/boot/arm-trusted-firmware-rockchip/src/bin/rk35/rk3576_ddr_lp4_1866MHz_lp5_2736MHz_v1.09.bin
+curl -s https://raw.githubusercontent.com/xuanranran/immortalwrt/refs/heads/master/package/boot/uboot-rockchip/Makefile > package/boot/uboot-rockchip/Makefile
+curl -s https://raw.githubusercontent.com/xuanranran/immortalwrt/refs/heads/master/package/boot/uboot-rockchip/patches/901-rockchip-rk3576-Add-support-for-FriendlyARM-NanoPi-R.patch > package/boot/uboot-rockchip/patches/901-rockchip-rk3576-Add-support-for-FriendlyARM-NanoPi-R.patch
+
 # libpfring
 rm -rf customfeeds/packages/libs/libpfring
 mkdir -p customfeeds/packages/libs/libpfring/patches
