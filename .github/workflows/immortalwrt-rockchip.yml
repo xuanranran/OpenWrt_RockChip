@@ -43,7 +43,7 @@ jobs:
         [ -f /etc/issue.net ] && cat /etc/issue.net
         [ -f /etc/issue ] && cat /etc/issue
         ulimit -a
-        
+
     - name: Clone Source Code
       run: |
         df -hT $PWD
@@ -68,7 +68,7 @@ jobs:
         ../scripts/immortalwrt/hook-package01.sh
         ../scripts/immortalwrt/hook-base.sh
         ../scripts/immortalwrt/hook-feeds.sh
-        
+
     - name: Install Feeds
       run: |
         cd $OPENWRTROOT
@@ -85,7 +85,7 @@ jobs:
         ../scripts/preset-nikki-core.sh
         ../scripts/preset-terminal-tools.sh
         make defconfig
-        
+
     - name: Download Package
       id: package
       run: |
@@ -94,7 +94,7 @@ jobs:
         make download -j$(nproc)
         find dl -size -1024c -exec ls -l {} \;
         find dl -size -1024c -exec rm -f {} \;
-  
+
     - name: Compile Packages
       id: compile
       run: |
@@ -140,7 +140,7 @@ jobs:
         popd
         make checksum
         echo "GENERATE_STATUS=success" >> $GITHUB_OUTPUT
-        
+
     - name: Generate release tag
       id: tag
       if: env.UPLOAD_RELEASE == 'true' && !cancelled()
@@ -152,7 +152,7 @@ jobs:
           echo -e "#### 后台地址: \`192.168.11.1\`\n" >> release.txt
           echo -e "#### 后台密码: \`password\`\n" >> release.txt
           echo "status=success" >> $GITHUB_OUTPUT
-          
+
     - name: Upload firmware to release
       uses: softprops/action-gh-release@v2
       if: steps.tag.outputs.status == 'success' && !cancelled()
