@@ -29,7 +29,7 @@ jobs:
 
     steps:
     - name: Checkout
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
 
     - name: Initialization Environment
       env:
@@ -43,7 +43,7 @@ jobs:
         [ -f /etc/issue.net ] && cat /etc/issue.net
         [ -f /etc/issue ] && cat /etc/issue
         ulimit -a
-        
+
     - name: Clone Source Code
       run: |
         df -hT $PWD
@@ -62,10 +62,12 @@ jobs:
         git clone --depth=1 https://github.com/immortalwrt/luci -b $REPO_BRANCH customfeeds/luci
         git clone --depth=1 https://github.com/openwrt/routing -b $REPO_BRANCH customfeeds/routing
         git clone --depth=1 https://github.com/openwrt/telephony -b $REPO_BRANCH customfeeds/telephony
+        echo "::group::Executing package hook scripts"
         find ../scripts -type f -name "*.sh" -exec chmod +x {} +
         ../scripts/immortalwrt/hook-package00.sh
         ../scripts/immortalwrt/hook-package01.sh
         ../scripts/immortalwrt/hook-base.sh
+        echo "::endgroup::"
         ../scripts/immortalwrt/hook-feeds.sh
 
     - name: Install Feeds
@@ -82,7 +84,9 @@ jobs:
         ../scripts/preset-clash-core.sh arm64
         ../scripts/preset-nikki-core.sh
         ../scripts/preset-terminal-tools.sh
+        echo "::group::Run the 6.12 upgrade patch"
         ../scripts/patch/up6_12_patch.sh
+        echo "::endgroup::"
         echo '
         CONFIG_TARGET_ROOTFS_PARTSIZE=2048
         CONFIG_DOCKER_CGROUP_OPTIONS=y
@@ -96,7 +100,9 @@ jobs:
         CONFIG_PACKAGE_luci-app-dockerman=y
         CONFIG_PACKAGE_luci-lib-docker=y
         ' >> .config
+        echo "::group::View 'make defconfig' output"
         make defconfig
+        echo "::endgroup::"
 
     - name: Download Package
       id: package
