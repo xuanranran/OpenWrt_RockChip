@@ -85,7 +85,7 @@ jobs:
         ../scripts/preset-nikki-core.sh
         ../scripts/preset-terminal-tools.sh
         echo "::group::Run the 6.12 upgrade patch"
-        ../scripts/patch/up6_12.sh
+        ../scripts/patch/up6_12_patch.sh
         echo "::endgroup::"
         echo '
         CONFIG_TARGET_ROOTFS_PARTSIZE=2048
