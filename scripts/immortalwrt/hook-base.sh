@@ -9,8 +9,10 @@ curl -s https://raw.githubusercontent.com/sbwml/r4s_build_script/refs/heads/mast
 echo "# CONFIG_KMSAN is not set" >> target/linux/x86/config-6.12
 
 # fstools
-rm -rf package/system/fstools
-git clone https://github.com/sbwml/package_system_fstools -b openwrt-24.10 package/system/fstools
+pushd package/system/fstools
+patch -p1 < $GITHUB_WORKSPACE/data/fstools-add-xfs-ntfs3-extroot-support-and-fix-packaging.patch
+sed -i 's/+libjson-c/+libjson-c +fstools/' Makefile
+popd
 
 # util-linux
 mkdir -p package/utils/util-linux/patches
