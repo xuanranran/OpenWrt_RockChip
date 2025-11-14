@@ -13,3 +13,12 @@ sed -i "/CONFIGURE_ARGS/i\TARGET_CFLAGS += -Wno-error=pedantic\n" package/libs/x
 # xlnetacc
 rm -rf customfeeds/luci/applications/luci-app-xlnetacc
 git clone https://github.com/xuanranran/luci-app-xlnetacc customfeeds/luci/applications/luci-app-xlnetacc
+
+
+rm -rf target/linux/rockchip/patches-6.12/036-01-v6.15-scsi-ufs-core-Export-ufshcd_dme_reset-and.patch
+rm -rf target/linux/rockchip/patches-6.12/036-02-v6.15-scsi-ufs-rockchip-Initial-support-for-UFS.patch
+rm -rf target/linux/rockchip/patches-6.12/036-03-v6.15-scsi-ufs-rockchip-Fix-devm_clk_bulk_get_all_enabled.patch
+
+curl -s https://raw.githubusercontent.com/openwrt/openwrt/refs/heads/main/target/linux/rockchip/patches-6.12/037-01-v6.15-scsi-ufs-core-Export-ufshcd_dme_reset-and.patch > target/linux/rockchip/patches-6.12/037-01-v6.15-scsi-ufs-core-Export-ufshcd_dme_reset-and.patch
+curl -s https://raw.githubusercontent.com/openwrt/openwrt/refs/heads/main/target/linux/rockchip/patches-6.12/037-02-v6.15-scsi-ufs-rockchip-Initial-support-for-UFS.patch > target/linux/rockchip/patches-6.12/037-02-v6.15-scsi-ufs-rockchip-Initial-support-for-UFS.patch
+curl -s https://raw.githubusercontent.com/openwrt/openwrt/refs/heads/main/target/linux/rockchip/patches-6.12/037-03-v6.15-scsi-ufs-rockchip-Fix-devm_clk_bulk_get_all_enabled.patch > target/linux/rockchip/patches-6.12/037-03-v6.15-scsi-ufs-rockchip-Fix-devm_clk_bulk_get_all_enabled.patch
