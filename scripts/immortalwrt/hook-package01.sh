@@ -9,3 +9,7 @@ curl -s https://raw.githubusercontent.com/sbwml/r4s_build_script/refs/heads/mast
 
 # libxcrypt
 sed -i "/CONFIGURE_ARGS/i\TARGET_CFLAGS += -Wno-error=pedantic\n" package/libs/xcrypt/libxcrypt/Makefile
+
+# xlnetacc
+rm -rf customfeeds/luci/applications/luci-app-xlnetacc
+git clone https://github.com/xuanranran/luci-app-xlnetacc customfeeds/luci/applications/luci-app-xlnetacc
