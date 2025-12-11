@@ -67,6 +67,3 @@ git clone https://github.com/sbwml/kmod_packages_net_coova-chilli customfeeds/pa
 # 替换杂项
 
 rm -rf package/emortal/cpufreq
-
-# del mqttled
-rm -rf customfeeds/packages/utils/mqttled
