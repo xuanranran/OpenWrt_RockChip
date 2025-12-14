@@ -9,8 +9,7 @@ on:
   #   types: started
 
 env:
-  USER_NAME: immortalwrt
-  REPO_URL: https://github.com/$USER_NAME/immortalwrt
+  USER_NAME: xuanranran
   REPO_BRANCH: master
   CONFIG_FILE: configs/immortalwrt/immortalwrt.config
   DIY_SH: scripts/immortalwrt/immortalwrt.sh
@@ -48,7 +47,7 @@ jobs:
     - name: Clone Source Code
       run: |
         df -hT $PWD
-        git clone $REPO_URL -b $REPO_BRANCH openwrt
+        git clone https://github.com/$USER_NAME/immortalwrt -b $REPO_BRANCH openwrt
 
     - name: Update Feeds
       id: update
