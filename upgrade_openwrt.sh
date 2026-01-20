@@ -719,18 +719,40 @@ echo
 
 # --- 9. 解压固件 ---
 echo -e "${C_BLUE}--- 步骤 9: 解压固件 ---${C_RESET}"
-echo -e "${C_BLUE}信息：${C_RESET}正在解压固件 '${C_CYAN}${IMAGE_PATH_GZ}${C_RESET}' -> '${C_CYAN}${IMAGE_PATH_IMG}${C_RESET}' ..."
-gunzip "$IMAGE_PATH_GZ"
-if [ ! -f "$IMAGE_PATH_IMG" ]; then echo -e "${C_B_RED}错误：${C_RESET}解压后未找到文件 '${C_RED}${IMAGE_PATH_IMG}${C_RESET}'。" >&2; exit 1; fi
+echo -e "${C_BLUE}信息：${C_RESET}正在解压固件 '${C_CYAN}${IMAGE_PATH_GZ}${C_RESET}' ..."
+
+# 临时禁用 set -e 以防止解压警告或非致命错误导致脚本退出
+set +e
+# 使用 -f 强制解压，覆盖可能存在的同名文件
+gunzip -f "$IMAGE_PATH_GZ"
+decomp_status=$?
+set -e
+
+if [ $decomp_status -ne 0 ]; then
+    echo -e "${C_B_RED}错误：${C_RESET}解压命令执行失败 (退出码 $decomp_status)。" >&2
+    exit 1
+fi
+
+if [ ! -f "$IMAGE_PATH_IMG" ]; then 
+    echo -e "${C_B_RED}错误：${C_RESET}解压后未找到文件 '${C_RED}${IMAGE_PATH_IMG}${C_RESET}'。" >&2; 
+    exit 1; 
+fi
+
 echo -e "${C_B_GREEN}信息：${C_RESET}固件解压完成。解压后文件: '${C_CYAN}${IMAGE_PATH_IMG}${C_RESET}'"
-ls -lh "$IMAGE_PATH_IMG"
+# 使用 || true 防止 ls 命令失败（如不支持 -h 参数）导致脚本退出
+ls -lh "$IMAGE_PATH_IMG" 2>/dev/null || ls -l "$IMAGE_PATH_IMG" || true
+
 echo -e "${C_BLUE}--- 步骤 9 完成 ---${C_RESET}"
 echo
 
 # --- 10. 检查空间并确定升级选项 ---
 echo -e "${C_BLUE}--- 步骤 10: 检查空间并确定升级选项 ---${C_RESET}"
 echo -e "${C_BLUE}信息：${C_RESET}正在检查 /tmp 可用空间以确定升级选项..."
-AVAILABLE_KIB=$(df -k /tmp | awk 'NR==2 {print $4}')
+
+# 临时禁用 set -e 防止 df 失败导致退出
+set +e
+AVAILABLE_KIB=$(df -k /tmp 2>/dev/null | awk 'NR==2 {print $4}')
+set -e
 
 SYSUPGRADE_ARGS=""
 KEEP_DATA_ALLOWED=1
