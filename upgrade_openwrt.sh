@@ -578,7 +578,7 @@ echo
 # --- 4. 获取最新 Release 信息 ---
 echo -e "${C_BLUE}--- 步骤 4: 获取最新 Release 信息 ---${C_RESET}"
 echo -e "${C_BLUE}信息：${C_RESET}正在从 GitHub 仓库 '${C_CYAN}${REPO}${C_RESET}' 获取最新版本信息..."
-API_URL="${GITHUB_PROXY}https://api.github.com/repos/$REPO/releases/latest"
+API_URL="https://api.github.com/repos/$REPO/releases/latest"
 RELEASE_INFO=$(wget -qO- --no-check-certificate "$API_URL")
 if [ -z "$RELEASE_INFO" ]; then echo -e "${C_B_RED}错误：${C_RESET}无法从 GitHub API 获取版本信息。" >&2; exit 1; fi
 RELEASE_TAG=$(echo "$RELEASE_INFO" | jq -r '.tag_name // "未知标签"')
@@ -650,13 +650,13 @@ echo
 # --- 7. 下载文件 ---
 echo -e "${C_BLUE}--- 步骤 7: 下载文件 ---${C_RESET}"
 echo -e "${C_BLUE}信息：${C_RESET}正在下载压缩固件 '${C_CYAN}${IMAGE_FILENAME_GZ}${C_RESET}' 到 '${C_CYAN}${IMAGE_PATH_GZ}${C_RESET}' ..."
-wget --progress=bar:force --no-check-certificate -O "$IMAGE_PATH_GZ" "$IMAGE_URL"
+wget --progress=bar:force --no-check-certificate -O "$IMAGE_PATH_GZ" "${GITHUB_PROXY}${IMAGE_URL}"
 echo -e "${C_B_GREEN}信息：${C_RESET}压缩固件下载完成。"
 
 # 下载校验文件
 if [ $SKIP_CHECKSUM -eq 0 ]; then
     echo -e "${C_BLUE}信息：${C_RESET}正在下载校验文件 '${C_CYAN}${CHECKSUM_FILENAME}${C_RESET}' 到 '${C_CYAN}${CHECKSUM_PATH}${C_RESET}' ..."
-    set +e; wget -q --no-check-certificate -O "$CHECKSUM_PATH" "$CHECKSUM_URL"; dl_status=$?; set -e
+    set +e; wget -q --no-check-certificate -O "$CHECKSUM_PATH" "${GITHUB_PROXY}${CHECKSUM_URL}"; dl_status=$?; set -e
     if [ $dl_status -ne 0 ]; then
         echo -e "${C_YELLOW}警告：${C_RESET}下载校验文件 '${C_YELLOW}${CHECKSUM_FILENAME}${C_RESET}' 失败，将跳过文件完整性校验。"
         rm -f "$CHECKSUM_PATH"; SKIP_CHECKSUM=1;
