@@ -154,13 +154,15 @@ detect_device_model() {
     # 需要从board_name或其他信息中提取{model}部分
     
     if [ -n "$board_name" ]; then
-        # board_name通常已经是正确的格式，如 "friendlyarm_nanopi-r5s"
-        DEVICE_MODEL="$board_name"
+        # board_name通常由于设备树原因可能包含逗号 (如 "friendlyarm,nanopi-r4s")
+        # 需将其替换为下划线以匹配Release文件名 (如 "friendlyarm_nanopi-r4s")
+        DEVICE_MODEL="${board_name//,/_}"
     elif [ -n "$detected_model" ]; then
-        # 如果只有model名称，尝试简单转换
-        # 这里需要根据实际情况调整映射逻辑
+        # 如果只有model名称，也尝试替换逗号
         echo -e "${C_YELLOW}警告：${C_RESET}无法从ubus获取board_name，尝试使用检测到的型号"
-        DEVICE_MODEL="$detected_model"
+        DEVICE_MODEL="${detected_model//,/_}"
+        # 这里可能还需要处理空格等其他字符
+        DEVICE_MODEL="${DEVICE_MODEL// /_}"
     else
         echo -e "${C_B_RED}错误：${C_RESET}无法检测设备型号" >&2
         echo -e "${C_YELLOW}提示：${C_RESET}请手动指定设备型号或检查系统信息" >&2
