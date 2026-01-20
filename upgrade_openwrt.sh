@@ -728,13 +728,17 @@ gunzip -f "$IMAGE_PATH_GZ"
 decomp_status=$?
 set -e
 
-if [ $decomp_status -ne 0 ]; then
+# gzip/gunzip 退出码 2 通常表示警告（如 trailing garbage），但也可能解压成功
+# 只要解压后的文件存在且不为空，我们就认为成功
+if [ $decomp_status -ne 0 ] && [ $decomp_status -ne 2 ]; then
     echo -e "${C_B_RED}错误：${C_RESET}解压命令执行失败 (退出码 $decomp_status)。" >&2
     exit 1
+elif [ $decomp_status -eq 2 ]; then
+    echo -e "${C_YELLOW}警告：${C_RESET}解压过程中有警告 (退出码 2，通常是忽略了尾部垃圾数据)，继续下一步。"
 fi
 
-if [ ! -f "$IMAGE_PATH_IMG" ]; then 
-    echo -e "${C_B_RED}错误：${C_RESET}解压后未找到文件 '${C_RED}${IMAGE_PATH_IMG}${C_RESET}'。" >&2; 
+if [ ! -s "$IMAGE_PATH_IMG" ]; then 
+    echo -e "${C_B_RED}错误：${C_RESET}解压后未找到文件或文件为空 '${C_RED}${IMAGE_PATH_IMG}${C_RESET}'。" >&2; 
     exit 1; 
 fi
 
