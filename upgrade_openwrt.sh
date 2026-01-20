@@ -808,15 +808,15 @@ echo -e "  ${C_YELLOW}警告：${C_RESET}'-F' 选项会跳过固件兼容性检�
 echo -e "  ${C_RED}• 使用不兼容的固件可能导致设备变砖！${C_RESET}"
 echo -e "  ${C_YELLOW}• 仅在您完全确定固件正确且了解风险时才使用${C_RESET}"
 echo -e "${C_CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${C_RESET}"
-read -p "$(echo -e "\n${C_B_YELLOW}❓ 是否使用强制升级 '-F' 选项？(y/N) [默认: ${C_B_GREEN}否${C_RESET}${C_B_YELLOW}]: ${C_RESET}")" confirm_force
-confirm_force=${confirm_force:-N}  # 默认为N
+read -p "$(echo -e "\n${C_B_YELLOW}❓ 是否使用强制升级 '-F' 选项？(Y/n) [默认: ${C_B_GREEN}是${C_RESET}${C_B_YELLOW}]: ${C_RESET}")" confirm_force
+confirm_force=${confirm_force:-Y}  # 默认为Y
 FORCE_FLAG_INFO=""
-if [[ "$confirm_force" =~ ^[Yy]$ ]]; then
-    echo -e "${C_BLUE}信息：${C_RESET}用户选择【${C_B_RED}使用${C_RESET}】强制 '-F' 选项！"
-    FORCE_FLAG="-F"; FORCE_FLAG_INFO="${C_B_RED}是 (-F)${C_RESET}";
-else
+if [[ "$confirm_force" =~ ^[Nn]$ ]]; then
     echo -e "${C_BLUE}信息：${C_RESET}本次升级将【${C_GREEN}不使用${C_RESET}】强制 '-F' 选项。"
     FORCE_FLAG=""; FORCE_FLAG_INFO="${C_GREEN}否${C_RESET}";
+else
+    echo -e "${C_BLUE}信息：${C_RESET}用户选择【${C_B_RED}使用${C_RESET}】强制 '-F' 选项！"
+    FORCE_FLAG="-F"; FORCE_FLAG_INFO="${C_B_RED}是 (-F)${C_RESET}";
 fi
 
 # --- 询问是否详细输出 (-v) ---
