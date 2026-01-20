@@ -39,7 +39,7 @@ CHECKSUM_PATH=""  # 校验和文件的完整路径
 select_github_access() {
     echo
     echo -e "${C_CYAN}╔═══════════════════════════════════════════════════════════════════════╗${C_RESET}"
-    echo -e "${C_CYAN}║${C_RESET}                 ${C_B_YELLOW}[🌐] GitHub 访问方式选择${C_RESET}                    ${C_CYAN}║${C_RESET}"
+    echo -e "${C_CYAN}║${C_RESET}                 ${C_B_YELLOW}[#] GitHub 访问方式选择${C_RESET}                    ${C_CYAN}║${C_RESET}"
     echo -e "${C_CYAN}╚═══════════════════════════════════════════════════════════════════════╝${C_RESET}"
     echo
     echo -e "${C_CYAN}┌───────────────────────────────────────────────────────────────────────┐${C_RESET}"
@@ -81,7 +81,7 @@ select_github_access() {
 select_docker_version() {
     echo
     echo -e "${C_CYAN}╔═══════════════════════════════════════════════════════════════════════╗${C_RESET}"
-    echo -e "${C_CYAN}║${C_RESET}                  ${C_B_YELLOW}[🐳] Docker 版本选择${C_RESET}                       ${C_CYAN}║${C_RESET}"
+    echo -e "${C_CYAN}║${C_RESET}                  ${C_B_YELLOW}[D] Docker 版本选择${C_RESET}                       ${C_CYAN}║${C_RESET}"
     echo -e "${C_CYAN}╚═══════════════════════════════════════════════════════════════════════╝${C_RESET}"
     echo
     echo -e "${C_CYAN}┌───────────────────────────────────────────────────────────────────────┐${C_RESET}"
@@ -592,7 +592,7 @@ fi
 echo -e "${C_CYAN}├──────────────────────────┼────────────────────────────────────────────┤${C_RESET}"
 # Docker版本行
 if [ "$USE_DOCKER" = true ]; then
-    printf "${C_CYAN}│${C_RESET} ${C_BLUE}[🐳]${C_RESET} %-20s ${C_CYAN}│${C_RESET} ${C_BLUE}%-42s${C_RESET} ${C_CYAN}│${C_RESET}\\n" "固件类型" "Docker 版本"
+    printf "${C_CYAN}│${C_RESET} ${C_BLUE}[D]${C_RESET} %-20s ${C_CYAN}│${C_RESET} ${C_BLUE}%-42s${C_RESET} ${C_CYAN}│${C_RESET}\\n" "固件类型" "Docker 版本"
 else
     printf "${C_CYAN}│${C_RESET} ${C_GREEN}[✓]${C_RESET} %-20s ${C_CYAN}│${C_RESET} ${C_GREEN}%-42s${C_RESET} ${C_CYAN}│${C_RESET}\\n" "固件类型" "标准版"
 fi
