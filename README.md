@@ -31,6 +31,30 @@ xunlong_orangepi-5-plus
 - 下载地址：https://github.com/xuanranran/OpenWrt_RockChip/releases 对应 Tag 标签内下载固件
 - 刷机方法请参考dn2刷机 https://github.com/xuanranran/OpenWrt_RockChip/blob/master/data/emmc.md
 
+### 固件升级
+
+本仓库提供自动升级脚本，支持自动检测设备型号和选择Docker版本。
+
+**方式一：使用本地脚本（推荐）**
+```bash
+# 下载并运行升级脚本
+wget https://raw.githubusercontent.com/xuanranran/OpenWrt_RockChip/main/upgrade_openwrt.sh
+chmod +x upgrade_openwrt.sh
+./upgrade_openwrt.sh
+```
+
+**方式二：直接运行（在线）**
+```bash
+bash <(curl -sL https://raw.githubusercontent.com/xuanranran/OpenWrt_RockChip/main/upgrade_openwrt.sh)
+```
+
+**功能特点：**
+- ✅ 自动检测设备型号（24个RockChip设备型号）
+- ✅ 支持选择标准版或Docker版固件
+- ✅ 自动下载对应设备的最新固件
+- ✅ SHA256校验确保文件完整性
+- ✅ 美观的用户界面和清晰的交互流程
+
 ### 固件展示
 <img width="1304" alt="image" src="https://github.com/xuanranran/OpenWrt_RockChip/blob/master/data/1.png?raw=true">
 
