@@ -125,11 +125,14 @@ detect_device_model() {
     
     local detected_model=""
     local board_name=""
+    local source_info="未找到"
+    local raw_info="未知"
     
     # 优先从 /proc/device-tree/model 读取
     if [ -r /proc/device-tree/model ]; then
         detected_model=$(cat /proc/device-tree/model 2>/dev/null | tr -d '\0')
-        echo -e "${C_BLUE}信息：${C_RESET}从 /proc/device-tree/model 读取: ${C_CYAN}${detected_model}${C_RESET}"
+        source_info="/proc/device-tree/model"
+        raw_info="$detected_model"
     fi
     
     # 如果未获取到，尝试从 openwrt_release 读取
@@ -137,29 +140,29 @@ detect_device_model() {
         . /etc/openwrt_release
         if [ -n "$DISTRIB_TARGET" ]; then
             detected_model="$DISTRIB_TARGET"
-            echo -e "${C_BLUE}信息：${C_RESET}从 /etc/openwrt_release 读取: ${C_CYAN}${detected_model}${C_RESET}"
+            source_info="/etc/openwrt_release"
+            raw_info="$detected_model"
         fi
     fi
     
     # 尝试从ubus获取board_name
     if command -v ubus >/dev/null 2>&1; then
-        board_name=$(ubus call system board 2>/dev/null | jq -r '.board_name // empty')
-        if [ -n "$board_name" ]; then
-            echo -e "${C_BLUE}信息：${C_RESET}从 ubus 读取 board_name: ${C_CYAN}${board_name}${C_RESET}"
+        local ubus_board=$(ubus call system board 2>/dev/null | jq -r '.board_name // empty')
+        if [ -n "$ubus_board" ]; then
+            board_name="$ubus_board"
+            # 如果之前没找到信息，或者ubus更准确，更新source
+            source_info="ubus system board"
+            raw_info="$board_name"
         fi
     fi
     
     # 根据检测到的信息映射到固件文件名格式
-    # 固件文件名格式: immortalwrt-rockchip-armv8-{model}-squashfs-sysupgrade.img.gz
-    # 需要从board_name或其他信息中提取{model}部分
-    
     if [ -n "$board_name" ]; then
         # board_name通常由于设备树原因可能包含逗号 (如 "friendlyarm,nanopi-r4s")
         # 需将其替换为下划线以匹配Release文件名 (如 "friendlyarm_nanopi-r4s")
         DEVICE_MODEL="${board_name//,/_}"
     elif [ -n "$detected_model" ]; then
         # 如果只有model名称，也尝试替换逗号
-        echo -e "${C_YELLOW}警告：${C_RESET}无法从ubus获取board_name，尝试使用检测到的型号"
         DEVICE_MODEL="${detected_model//,/_}"
         # 这里可能还需要处理空格等其他字符
         DEVICE_MODEL="${DEVICE_MODEL// /_}"
@@ -168,8 +171,25 @@ detect_device_model() {
         echo -e "${C_YELLOW}提示：${C_RESET}请手动指定设备型号或检查系统信息" >&2
         return 1
     fi
+
+    # 显示检测结果表格
+    echo
+    echo -e "${C_CYAN}┌──────────────────────────┬────────────────────────────────────────────┐${C_RESET}"
+    echo -e "${C_CYAN}│${C_RESET} ${C_B_BLUE}设备型号检测${C_RESET}           ${C_CYAN}│${C_RESET} ${C_B_BLUE}详情${C_RESET}                                   ${C_CYAN}│${C_RESET}"
+    echo -e "${C_CYAN}╞══════════════════════════╪════════════════════════════════════════════╡${C_RESET}"
     
-    echo -e "${C_B_GREEN}✓ 检测到设备型号：${C_RESET}${C_GREEN}${DEVICE_MODEL}${C_RESET}"
+    # 截断过长的原始信息
+    if [ ${#raw_info} -gt 42 ]; then raw_info_display="${raw_info:0:39}..."; else raw_info_display="$raw_info"; fi
+    printf "${C_CYAN}│${C_RESET} ${C_GREEN}[i]${C_RESET} %-20s ${C_CYAN}│${C_RESET} %-42s ${C_CYAN}│${C_RESET}\\n" "检测来源" "$source_info"
+    echo -e "${C_CYAN}├──────────────────────────┼────────────────────────────────────────────┤${C_RESET}"
+    printf "${C_CYAN}│${C_RESET} ${C_GREEN}[i]${C_RESET} %-20s ${C_CYAN}│${C_RESET} %-42s ${C_CYAN}│${C_RESET}\\n" "原始信息" "$raw_info_display"
+    echo -e "${C_CYAN}├──────────────────────────┼────────────────────────────────────────────┤${C_RESET}"
+    
+    # 截断过长的最终型号
+    if [ ${#DEVICE_MODEL} -gt 42 ]; then model_display="${DEVICE_MODEL:0:39}..."; else model_display="$DEVICE_MODEL"; fi
+    printf "${C_CYAN}│${C_RESET} ${C_GREEN}[√]${C_RESET} %-20s ${C_CYAN}│${C_RESET} ${C_GREEN}%-42s${C_RESET} ${C_CYAN}│${C_RESET}\\n" "最终匹配型号" "$model_display"
+    echo -e "${C_CYAN}└──────────────────────────┴────────────────────────────────────────────┘${C_RESET}"
+    
     return 0
 }
 
@@ -492,14 +512,15 @@ fi
 echo
 echo -e "${C_BLUE}信息：${C_RESET}正在生成固件文件名..."
 
+FIRMWARE_TYPE_STR=""
 if [ "$USE_DOCKER" = true ]; then
     IMAGE_FILENAME_GZ="docker-immortalwrt-rockchip-armv8-${DEVICE_MODEL}-squashfs-sysupgrade.img.gz"
     CHECKSUM_FILENAME="docker-sha256sums"
-    echo -e "${C_BLUE}信息：${C_RESET}使用 Docker 版本固件"
+    FIRMWARE_TYPE_STR="Docker 版本固件"
 else
     IMAGE_FILENAME_GZ="immortalwrt-rockchip-armv8-${DEVICE_MODEL}-squashfs-sysupgrade.img.gz"
     CHECKSUM_FILENAME="sha256sums"
-    echo -e "${C_BLUE}信息：${C_RESET}使用标准版固件"
+    FIRMWARE_TYPE_STR="标准版固件"
 fi
 
 IMAGE_FILENAME_IMG="${IMAGE_FILENAME_GZ%.gz}"
@@ -507,8 +528,21 @@ IMAGE_PATH_GZ="$TMP_DIR/$IMAGE_FILENAME_GZ"
 IMAGE_PATH_IMG="$TMP_DIR/$IMAGE_FILENAME_IMG"
 CHECKSUM_PATH="$TMP_DIR/$CHECKSUM_FILENAME"
 
-echo -e "${C_B_GREEN}✓ 固件文件名：${C_RESET}${C_GREEN}${IMAGE_FILENAME_GZ}${C_RESET}"
-echo -e "${C_B_GREEN}✓ 校验文件名：${C_RESET}${C_GREEN}${CHECKSUM_FILENAME}${C_RESET}"
+echo
+echo -e "${C_CYAN}┌──────────────────────────┬────────────────────────────────────────────┐${C_RESET}"
+echo -e "${C_CYAN}│${C_RESET} ${C_B_BLUE}固件参数生成${C_RESET}           ${C_CYAN}│${C_RESET} ${C_B_BLUE}详情${C_RESET}                                   ${C_CYAN}│${C_RESET}"
+echo -e "${C_CYAN}╞══════════════════════════╪════════════════════════════════════════════╡${C_RESET}"
+
+printf "${C_CYAN}│${C_RESET} ${C_GREEN}[✓]${C_RESET} %-20s ${C_CYAN}│${C_RESET} ${C_GREEN}%-42s${C_RESET} ${C_CYAN}│${C_RESET}\\n" "固件类型" "$FIRMWARE_TYPE_STR"
+echo -e "${C_CYAN}├──────────────────────────┼────────────────────────────────────────────┤${C_RESET}"
+
+# 截断过长的文件名
+if [ ${#IMAGE_FILENAME_GZ} -gt 42 ]; then fn_display="${IMAGE_FILENAME_GZ:0:39}..."; else fn_display="$IMAGE_FILENAME_GZ"; fi
+printf "${C_CYAN}│${C_RESET} ${C_GREEN}[✓]${C_RESET} %-20s ${C_CYAN}│${C_RESET} %-42s ${C_CYAN}│${C_RESET}\\n" "固件文件名" "$fn_display"
+echo -e "${C_CYAN}├──────────────────────────┼────────────────────────────────────────────┤${C_RESET}"
+
+printf "${C_CYAN}│${C_RESET} ${C_GREEN}[✓]${C_RESET} %-20s ${C_CYAN}│${C_RESET} %-42s ${C_CYAN}│${C_RESET}\\n" "校验文件名" "$CHECKSUM_FILENAME"
+echo -e "${C_CYAN}└──────────────────────────┴────────────────────────────────────────────┘${C_RESET}"
 echo
 
 # 启用严格错误检查
