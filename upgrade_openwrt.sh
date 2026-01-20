@@ -923,11 +923,50 @@ if [[ "$confirm_upgrade" =~ ^[Yy]$ ]]; then
     echo -e "$MSG_DESC"
 
     # 执行命令
+    # 临时禁用 strict error checking，以便手动处理 sysupgrade 失败
+    set +e
     sysupgrade $FORCE_FLAG $VERBOSE_FLAG $SYSUPGRADE_ARGS "$IMAGE_PATH_IMG"
+    sysupgrade_status=$?
+    set -e
 
-    echo # 换行
-    echo -e "${C_B_GREEN}✅ 信息：sysupgrade 命令已执行。如果成功，系统将会重启。${C_RESET}"
-    exit 0
+    if [ $sysupgrade_status -eq 0 ]; then
+        echo # 换行
+        echo -e "${C_B_GREEN}✅ 信息：sysupgrade 命令已执行。如果成功，系统将会重启。${C_RESET}"
+        exit 0
+    else
+        echo
+        echo -e "${C_B_RED}❌ 错误：sysupgrade 命令执行失败 (退出码 $sysupgrade_status)。${C_RESET}"
+        
+        # 如果之前没用过 -F，询问是否尝试强制升级
+        if [[ "$FORCE_FLAG" != "-F" ]]; then
+            echo -e "${C_YELLOW}分析：升级失败通常是因为固件版本检查不通过 (如 'Image metadata not present' 或 'Image check failed')。${C_RESET}"
+            echo -e "${C_YELLOW}      这在跨版本升级或刷写不同固件时很常见。${C_RESET}"
+            
+            read -p "$(echo -e "\n${C_B_YELLOW}❓ 是否尝试使用强制升级 '-F' 选项重试？(y/N) [默认: ${C_B_GREEN}是${C_RESET}${C_B_YELLOW}]: ${C_RESET}")" retry_force
+            retry_force=${retry_force:-Y}
+            
+            if [[ "$retry_force" =~ ^[Yy]$ ]]; then
+                echo -e "${C_BLUE}信息：${C_RESET}正在尝试使用强制升级选项 (-F) 重试..."
+                FORCE_FLAG="-F"
+                # 再次执行 sysupgrade
+                set +e
+                sysupgrade $FORCE_FLAG $VERBOSE_FLAG $SYSUPGRADE_ARGS "$IMAGE_PATH_IMG"
+                sysupgrade_status_retry=$?
+                set -e
+                
+                if [ $sysupgrade_status_retry -eq 0 ]; then
+                     echo; echo -e "${C_B_GREEN}✅ 信息：强制升级命令已执行。设备应正在重启。${C_RESET}"; exit 0;
+                else
+                     echo; echo -e "${C_B_RED}❌ 错误：强制升级依然失败。请检查日志输出。${C_RESET}"; exit 1;
+                fi
+            else
+                echo -e "${C_YELLOW}信息：用户选择不重试。脚本退出。${C_RESET}"
+                exit 1
+            fi
+        else
+            exit 1
+        fi
+    fi
 else
     echo # 换行
     echo -e "${C_YELLOW}操作已取消。${C_RESET}解压后的固件文件保留在 '${C_CYAN}${IMAGE_PATH_IMG}${C_RESET}'，您可以手动升级或删除它。"
