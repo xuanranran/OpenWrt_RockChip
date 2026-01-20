@@ -948,17 +948,13 @@ if [[ "$confirm_upgrade" =~ ^[Yy]$ ]]; then
             if [[ "$retry_force" =~ ^[Yy]$ ]]; then
                 echo -e "${C_BLUE}信息：${C_RESET}正在尝试使用强制升级选项 (-F) 重试..."
                 FORCE_FLAG="-F"
-                # 再次执行 sysupgrade
-                set +e
-                sysupgrade $FORCE_FLAG $VERBOSE_FLAG $SYSUPGRADE_ARGS "$IMAGE_PATH_IMG"
-                sysupgrade_status_retry=$?
-                set -e
                 
-                if [ $sysupgrade_status_retry -eq 0 ]; then
-                     echo; echo -e "${C_B_GREEN}✅ 信息：强制升级命令已执行。设备应正在重启。${C_RESET}"; exit 0;
-                else
-                     echo; echo -e "${C_B_RED}❌ 错误：强制升级依然失败。请检查日志输出。${C_RESET}"; exit 1;
-                fi
+                echo -e "${C_B_GREEN}✅ 信息：正在执行强制升级命令。连接即将断开，请等待设备重启...${C_RESET}"
+                echo
+                
+                # 使用 exec 替换当前 shell 进程
+                # 这样可以避免 sysupgrade 成功后（杀进程/断开连接时）返回非零退出码导致脚本误报错误
+                exec sysupgrade $FORCE_FLAG $VERBOSE_FLAG $SYSUPGRADE_ARGS "$IMAGE_PATH_IMG"
             else
                 echo -e "${C_YELLOW}信息：用户选择不重试。脚本退出。${C_RESET}"
                 exit 1
