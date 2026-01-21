@@ -38,9 +38,7 @@ xunlong_orangepi-5-plus
 **方式一：使用本地脚本（推荐）**
 ```bash
 # 下载并运行升级脚本
-wget https://raw.githubusercontent.com/xuanranran/OpenWrt_RockChip/master/upgrade_openwrt.sh
-chmod +x upgrade_openwrt.sh
-./upgrade_openwrt.sh
+wget https://raw.githubusercontent.com/xuanranran/OpenWrt_RockChip/master/upgrade_openwrt.sh && chmod +x upgrade_openwrt.sh && ./upgrade_openwrt.sh
 ```
 
 **方式二：直接运行（在线）**
@@ -53,7 +51,6 @@ bash <(curl -sL https://raw.githubusercontent.com/xuanranran/OpenWrt_RockChip/ma
 - ✅ 支持选择标准版或Docker版固件
 - ✅ 自动下载对应设备的最新固件
 - ✅ SHA256校验确保文件完整性
-- ✅ 美观的用户界面和清晰的交互流程
 
 ### 固件展示
 <img width="1304" alt="image" src="https://github.com/xuanranran/OpenWrt_RockChip/blob/master/data/1.png?raw=true">
