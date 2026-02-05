@@ -98,6 +98,7 @@ jobs:
         CONFIG_DOCKER_STO_BTRFS=y
         CONFIG_DOCKER_STO_EXT4=y
         CONFIG_PACKAGE_luci-app-dockerman=y
+        CONFIG_PACKAGE_luci-lib-docker=y
         ' >> .config
         echo "::group::View 'make defconfig' output"
         make defconfig
