@@ -20,15 +20,6 @@ rm -rf customfeeds/packages/net/{*alist,chinadns-ng,dns2socks,dns2tcp,lucky,sing
 rm -rf customfeeds/packages/lang/golang
 git clone https://github.com/sbwml/packages_lang_golang customfeeds/packages/lang/golang
 
-# Docker
-rm -rf customfeeds/luci/applications/luci-app-dockerman
-git clone https://github.com/sbwml/luci-app-dockerman customfeeds/luci/applications/luci-app-dockerman
-rm -rf customfeeds/packages/utils/{docker,dockerd,containerd,runc}
-git clone https://github.com/sbwml/packages_utils_docker customfeeds/packages/utils/docker
-git clone https://github.com/sbwml/packages_utils_dockerd customfeeds/packages/utils/dockerd
-git clone https://github.com/sbwml/packages_utils_containerd customfeeds/packages/utils/containerd
-git clone https://github.com/sbwml/packages_utils_runc customfeeds/packages/utils/runc
-
 # samba4 - bump version
 # rm -rf customfeeds/packages/net/samba4
 # git clone https://github.com/sbwml/feeds_packages_net_samba4 customfeeds/packages/net/samba4
