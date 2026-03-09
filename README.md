@@ -35,15 +35,15 @@ xunlong_orangepi-5-plus
 
 本仓库提供自动升级脚本，支持自动检测设备型号和选择Docker版本。
 
-**方式一：使用本地脚本（推荐）**
+**方式一：直接运行（在线）**
 ```bash
-# 下载并运行升级脚本
-wget https://raw.githubusercontent.com/xuanranran/scripts/main/update_openwrt.sh && chmod +x update_openwrt.sh && ./upgrade_openwrt.sh
+bash <(curl -sL https://upop.miaoco.me/update)
 ```
 
-**方式二：直接运行（在线）**
+**方式二：使用本地脚本（推荐）**
 ```bash
-bash <(curl -sL https://raw.githubusercontent.com/xuanranran/scripts/main/update_openwrt.sh)
+# 下载并运行升级脚本
+wget https://upop.miaoco.me/update && chmod +x update && sh update
 ```
 
 **功能特点：**
