@@ -17,6 +17,7 @@ popd
 # util-linux
 mkdir -p package/utils/util-linux/patches
 curl -s https://raw.githubusercontent.com/sbwml/package_utils_util-linux/refs/heads/openwrt-24.10/patches/0001-ntfs-use-ntfs3-for-read-write-filesystem.patch > package/utils/util-linux/patches/0001-ntfs-use-ntfs3-for-read-write-filesystem.patch
+curl -sL https://github.com/util-linux/util-linux/commit/5452239f6e69d2d3aaa427d2d2253247cfb7cb7b.patch > package/utils/util-linux/patches/0002-nsenter-Fix-AT_HANDLE_FID-on-musl.patch
 
 # openssl urandom
 sed -i "/-openwrt/iOPENSSL_OPTIONS += enable-ktls '-DDEVRANDOM=\"\\\\\"/dev/urandom\\\\\"\"\'\n" package/libs/openssl/Makefile
