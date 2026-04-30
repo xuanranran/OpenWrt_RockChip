@@ -64,8 +64,7 @@ jobs:
         git clone --depth=1 https://github.com/openwrt/telephony -b $REPO_BRANCH customfeeds/telephony
         echo "::group::Executing package hook scripts"
         find ../scripts -type f -name "*.sh" -exec chmod +x {} +
-        ../scripts/immortalwrt/hook-package00.sh
-        ../scripts/immortalwrt/hook-package01.sh
+        ../scripts/immortalwrt/hook-package.sh
         ../scripts/immortalwrt/hook-base.sh
         echo "::endgroup::"
         ../scripts/immortalwrt/hook-feeds.sh
@@ -84,9 +83,6 @@ jobs:
         ../scripts/preset-clash-core.sh arm64
         ../scripts/preset-nikki-core.sh
         ../scripts/preset-terminal-tools.sh
-        # echo "::group::Run the 6.12 upgrade patch"
-        # ../scripts/patch/up6_12_patch.sh
-        # echo "::endgroup::"
         echo "::group::View 'make defconfig' output"
         make defconfig
         echo "::endgroup::"
