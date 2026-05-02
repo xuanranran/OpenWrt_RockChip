@@ -1,0 +1,45 @@
+--- a/library/sha512.c
++++ b/library/sha512.c
+@@ -76,21 +76,17 @@
+ #          error "Must use minimum -march=armv8.2-a+sha3 for MBEDTLS_SHA512_USE_A64_CRYPTO_*"
+ #        else
+-#          pragma clang attribute push (__attribute__((target("sha3"))), apply_to=function)
+-#          define MBEDTLS_POP_TARGET_PRAGMA
++#          define MBEDTLS_ENABLE_ARM_SHA512_TARGET_PRAGMA
+ #        endif
+ #      elif defined(__clang__)
+ #        if __clang_major__ < 7
+ #          error "A more recent Clang is required for MBEDTLS_SHA512_USE_A64_CRYPTO_*"
+ #        else
+-#          pragma clang attribute push (__attribute__((target("sha3"))), apply_to=function)
+-#          define MBEDTLS_POP_TARGET_PRAGMA
++#          define MBEDTLS_ENABLE_ARM_SHA512_TARGET_PRAGMA
+ #        endif
+ #      elif defined(__GNUC__)
+ #        if __GNUC__ < 8
+ #          error "A more recent GCC is required for MBEDTLS_SHA512_USE_A64_CRYPTO_*"
+ #        else
+-#          pragma GCC push_options
+-#          pragma GCC target ("arch=armv8.2-a+sha3")
+-#          define MBEDTLS_POP_TARGET_PRAGMA
++#          define MBEDTLS_ENABLE_ARM_SHA512_TARGET_PRAGMA
+ #        endif
+ #      else
+@@ -346,6 +343,17 @@ static const uint64_t K[80] = {
+ 
+ #if defined(MBEDTLS_SHA512_USE_A64_CRYPTO_IF_PRESENT) || \
+     defined(MBEDTLS_SHA512_USE_A64_CRYPTO_ONLY)
++
++#if defined(MBEDTLS_ENABLE_ARM_SHA512_TARGET_PRAGMA)
++#if defined(__clang__)
++#pragma clang attribute push (__attribute__((target("sha3"))), apply_to=function)
++#elif defined(__GNUC__)
++#pragma GCC push_options
++#pragma GCC target ("arch=armv8.2-a+sha3")
++#endif
++#define MBEDTLS_POP_TARGET_PRAGMA
++#undef MBEDTLS_ENABLE_ARM_SHA512_TARGET_PRAGMA
++#endif
+ 
+ #if defined(MBEDTLS_SHA512_USE_A64_CRYPTO_ONLY)
+ #  define mbedtls_internal_sha512_process_many_a64_crypto mbedtls_internal_sha512_process_many
