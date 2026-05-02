@@ -82,7 +82,6 @@ jobs:
         ../$DIY_SH
         ../scripts/preset-clash-core.sh arm64
         ../scripts/preset-nikki-core.sh
-        ../scripts/preset-terminal-tools.sh
         echo "::group::View 'make defconfig' output"
         make defconfig
         echo "::endgroup::"
