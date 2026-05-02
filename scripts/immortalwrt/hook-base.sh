@@ -269,6 +269,9 @@ popd
 rm -rf package/kernel/mac80211
 git clone https://$github/sbwml/package_kernel_mac80211 package/kernel/mac80211 -b v6.18
 
+# rockchip drm - fix Linux 6.18 package dependencies
+patch -p1 < ../data/rockchip/001-fix-linux-6.18-drm-rockchip-module-deps.patch
+
 # kernel patch
 # btf: silence btf module warning messages
 curl -s $mirror/openwrt/patch/kernel-6.18/btf/990-btf-silence-btf-module-warning-messages.patch > target/linux/generic/hack-6.18/990-btf-silence-btf-module-warning-messages.patch
