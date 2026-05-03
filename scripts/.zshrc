@@ -70,16 +70,9 @@ DISABLE_AUTO_UPDATE="true"
 # Add wisely, as too many plugins slow down shell startup.
 plugins=(git command-not-found extract z docker zsh-completions zsh-autosuggestions zsh-syntax-highlighting)
 
-ZSH_COMPDUMP="${HOME}/.zcompdump"
+ZSH_COMPDUMP="/tmp/.zcompdump-${USER:-root}"
 ZSH_DISABLE_COMPFIX=true
-if [[ -w /tmp ]]; then
-  _zcompdump_clean_marker="/tmp/.zcompdump-cleaned-${USER:-root}"
-  if [[ ! -e "${_zcompdump_clean_marker}" ]]; then
-    rm -f "${HOME}"/.zcompdump "${HOME}"/.zcompdump-*(N) 2>/dev/null
-    : >| "${_zcompdump_clean_marker}" 2>/dev/null
-  fi
-  unset _zcompdump_clean_marker
-fi
+rm -f "${HOME}"/.zcompdump "${HOME}"/.zcompdump-*(N) 2>/dev/null
 
 source $ZSH/oh-my-zsh.sh
 
