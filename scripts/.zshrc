@@ -74,7 +74,7 @@ ZSH_COMPDUMP="/tmp/.zcompdump-${USER:-root}"
 ZSH_DISABLE_COMPFIX=true
 rm -f "${HOME}"/.zcompdump "${HOME}"/.zcompdump-*(N) 2>/dev/null
 
-fpath+=${ZSH_CUSTOM:-${ZSH:-~/.oh-my-zsh}/custom}/plugins/zsh-completions/src
+fpath=("${ZSH_CUSTOM:-${ZSH:-~/.oh-my-zsh}/custom}/plugins/zsh-completions/src" $fpath)
 autoload -Uz compinit && compinit -C -d "${ZSH_COMPDUMP}"
 
 source $ZSH/oh-my-zsh.sh
