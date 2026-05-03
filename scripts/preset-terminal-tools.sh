@@ -24,3 +24,22 @@ git clone --depth=1 https://github.com/zsh-users/zsh-completions ./.oh-my-zsh/cu
 cp "$GITHUB_WORKSPACE/scripts/.zshrc" .
 
 popd
+
+# Preload oh-my-zsh completion cache after boot so SSH logins stay fast.
+mkdir -p files/etc/init.d files/etc/rc.d
+cat > files/etc/init.d/zsh-preload <<'EOF'
+#!/bin/sh /etc/rc.common
+
+START=99
+
+start() {
+	(
+		sleep 20
+		[ -x /usr/bin/zsh ] || exit 0
+		[ -r /root/.zshrc ] || exit 0
+		HOME=/root USER=root SHELL=/usr/bin/zsh /usr/bin/zsh -i -c exit >/tmp/zsh-preload.log 2>&1
+	) &
+}
+EOF
+chmod 755 files/etc/init.d/zsh-preload
+ln -sf ../init.d/zsh-preload files/etc/rc.d/S99zsh-preload
