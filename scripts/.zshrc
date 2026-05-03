@@ -68,11 +68,14 @@ DISABLE_AUTO_UPDATE="true"
 # Custom plugins may be added to $ZSH_CUSTOM/plugins/
 # Example format: plugins=(rails git textmate ruby lighthouse)
 # Add wisely, as too many plugins slow down shell startup.
-plugins=(command-not-found extract z zsh-completions zsh-autosuggestions zsh-syntax-highlighting)
+plugins=(command-not-found extract z zsh-autosuggestions zsh-syntax-highlighting)
 
 ZSH_COMPDUMP="/tmp/.zcompdump-${USER:-root}"
 ZSH_DISABLE_COMPFIX=true
 rm -f "${HOME}"/.zcompdump "${HOME}"/.zcompdump-*(N) 2>/dev/null
+
+fpath+=${ZSH_CUSTOM:-${ZSH:-~/.oh-my-zsh}/custom}/plugins/zsh-completions/src
+autoload -Uz compinit && compinit -C -d "${ZSH_COMPDUMP}"
 
 source $ZSH/oh-my-zsh.sh
 
