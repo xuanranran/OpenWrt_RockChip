@@ -265,13 +265,6 @@ pushd target/linux/generic/hack-6.18
     curl -Os $mirror/openwrt/patch/kernel-6.18/linux-rt/012-RT-0007-Revert-drm-i915-Depend-on-PREEMPT_RT.patch
 popd
 
-# mac80211 - 6.18
-rm -rf package/kernel/mac80211
-git clone https://$github/sbwml/package_kernel_mac80211 package/kernel/mac80211 -b v6.18
-
-# rockchip drm - fix Linux 6.18 package dependencies
-patch -p1 < ../data/rockchip/001-fix-linux-6.18-drm-rockchip-module-deps.patch
-
 # kernel patch
 # btf: silence btf module warning messages
 curl -s $mirror/openwrt/patch/kernel-6.18/btf/990-btf-silence-btf-module-warning-messages.patch > target/linux/generic/hack-6.18/990-btf-silence-btf-module-warning-messages.patch
@@ -284,7 +277,3 @@ curl -s $mirror/openwrt/patch/kernel-6.18/net/983-add-bcm-fullcone-nft_masq-supp
 curl -s $mirror/openwrt/patch/kernel-6.18/net/601-netfilter-export-udp_get_timeouts-function.patch > target/linux/generic/hack-6.18/601-netfilter-export-udp_get_timeouts-function.patch
 curl -s $mirror/openwrt/patch/kernel-6.18/net/952-net-conntrack-events-support-multiple-registrant.patch > target/linux/generic/hack-6.18/952-net-conntrack-events-support-multiple-registrant.patch
 curl -s $mirror/openwrt/patch/kernel-6.18/net/953-net-patch-linux-kernel-to-support-shortcut-fe.patch > target/linux/generic/hack-6.18/953-net-patch-linux-kernel-to-support-shortcut-fe.patch
-
-# mbedtls: keep SHA-512 A64 acceleration while avoiding GCC target/fortify clash
-mkdir -p package/libs/mbedtls/patches
-cp ../data/mbedtls/102-fix-sha512-gcc-pragma-target.patch package/libs/mbedtls/patches/

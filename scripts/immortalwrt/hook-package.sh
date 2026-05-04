@@ -112,6 +112,7 @@ sed -i '/MESON_ARGS/i TARGET_CFLAGS += -std=gnu17\n' customfeeds/packages/libs/l
 sed -i '/TARGET_CFLAGS/s/$/ -std=gnu17/' customfeeds/packages/net/coova-chilli/Makefile
 
 sed -i '/^CONFIG_PAGE_POOL=y$/a CONFIG_SHORTCUT_FE=y' target/linux/rockchip/armv8/config-6.18
+sed -i '/^CONFIG_ARM64_4K_PAGES=y$/a CONFIG_ARM64_BRBE=y' target/linux/rockchip/armv8/config-6.18
 
 # libnftnl
 rm -rf package/libs/libnftnl/patches
