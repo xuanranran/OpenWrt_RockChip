@@ -265,10 +265,6 @@ pushd target/linux/generic/hack-6.18
     curl -Os $mirror/openwrt/patch/kernel-6.18/linux-rt/012-RT-0007-Revert-drm-i915-Depend-on-PREEMPT_RT.patch
 popd
 
-# mac80211 - 6.18
-rm -rf package/kernel/mac80211
-git clone https://$github/sbwml/package_kernel_mac80211 package/kernel/mac80211 -b v6.18
-
 # rockchip drm - fix Linux 6.18 package dependencies
 patch -p1 < ../data/rockchip/001-fix-linux-6.18-drm-rockchip-module-deps.patch
 

@@ -40,15 +40,5 @@ sed -i 's/services/vpn/g' customfeeds/luci/applications/luci-app-tailscale-commu
 rm -rf package/base-files/files/etc/banner
 cp -f $GITHUB_WORKSPACE/data/banner package/base-files/files/etc/banner
 
-# Kernel - LRNG
-echo -e "\n# Kernel - LRNG" >> .config
-echo "CONFIG_KERNEL_LRNG=y" >> .config
-echo "# CONFIG_PACKAGE_urandom-seed is not set" >> .config
-echo "# CONFIG_PACKAGE_urngd is not set" >> .config
-
-# DPDK
-echo 'CONFIG_PACKAGE_dpdk-tools=y' >> .config
-echo 'CONFIG_PACKAGE_numactl=y' >> .config
-
 # rockchip test kernel-6.18
 sed -i "s/6.12/6.18/g" target/linux/rockchip/Makefile
