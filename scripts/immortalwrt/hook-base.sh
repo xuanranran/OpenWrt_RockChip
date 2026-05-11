@@ -278,6 +278,11 @@ curl -s $mirror/openwrt/patch/kernel-6.18/net/601-netfilter-export-udp_get_timeo
 curl -s $mirror/openwrt/patch/kernel-6.18/net/952-net-conntrack-events-support-multiple-registrant.patch > target/linux/generic/hack-6.18/952-net-conntrack-events-support-multiple-registrant.patch
 curl -s $mirror/openwrt/patch/kernel-6.18/net/953-net-patch-linux-kernel-to-support-shortcut-fe.patch > target/linux/generic/hack-6.18/953-net-patch-linux-kernel-to-support-shortcut-fe.patch
 
+# kernel 6.18: rockchipdrm now needs the split-out DRM client library.
+if ! grep -q 'LINUX_6_18:kmod-drm-client-lib' target/linux/rockchip/modules.mk; then
+    patch -p1 < ../data/rockchip/001-fix-linux-6.18-drm-rockchip-module-deps.patch
+fi
+
 # mbedtls: keep SHA-512 A64 acceleration while avoiding GCC target/fortify clash
 mkdir -p package/libs/mbedtls/patches
 cp ../data/mbedtls/102-fix-sha512-gcc-pragma-target.patch package/libs/mbedtls/patches/

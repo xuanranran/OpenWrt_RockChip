@@ -1,10 +1,8 @@
 --- a/target/linux/rockchip/modules.mk
 +++ b/target/linux/rockchip/modules.mk
-@@ -9 +9,2 @@ define KernelPackage/drm-rockchip
+@@ -8,3 +8,4 @@ define KernelPackage/drm-rockchip
+   DEPENDS:=@TARGET_rockchip +kmod-backlight +kmod-drm-kms-helper \
 -	+kmod-multimedia-input +kmod-drm-display-helper +kmod-cec-core
 +	+kmod-multimedia-input +kmod-drm-display-helper +kmod-cec-core \
 +	+LINUX_6_18:kmod-drm-client-lib
-@@ -22,0 +24 @@ define KernelPackage/drm-rockchip
-+	CONFIG_ROCKCHIP_DW_DP=y \
-@@ -40,0 +43 @@ define KernelPackage/drm-rockchip
-+	$(LINUX_DIR)/drivers/gpu/drm/bridge/synopsys/dw-dp.ko \
+   KCONFIG:= \
