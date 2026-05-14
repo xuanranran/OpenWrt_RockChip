@@ -102,8 +102,6 @@ sed -i 's|^PKG_SOURCE_URL:=.*|PKG_SOURCE_URL:=@SF/$(PKG_NAME)/$(PKG_NAME)/$(PKG_
 
 # xl2tpd
 sed -i '/ifneq (0,0)/i TARGET_CFLAGS += -std=gnu17\n' customfeeds/packages/net/xl2tpd/Makefile
-# netdata
-sed -i '/TARGET_CFLAGS/i TARGET_CFLAGS += -std=gnu17\n' customfeeds/packages/admin/netdata/Makefile
 
 # fix gcc-16.1.0
 # elfutils lto
@@ -113,9 +111,11 @@ mkdir -p customfeeds/packages/libs/libwebsockets/patches
 curl -s $mirror/openwrt/patch/packages-patches_gcc16/libwebsockets/900-fix-build-for-gcc-16.patch > customfeeds/packages/libs/libwebsockets/patches/900-fix-build-for-gcc-16.patch
 # bash
 sed -i "/PKG_INSTALL:=/i\PKG_BUILD_FLAGS:=no-lto" customfeeds/packages/utils/bash/Makefile
+# quectel-cm
+mkdir -p customfeeds/packages/net/quectel-cm/patches
+cp -f $GITHUB_WORKSPACE/data/patches/quectel-cm/030-gcc16.patch customfeeds/packages/net/quectel-cm/patches/030-gcc16.patch
 
 sed -i '/^CONFIG_PAGE_POOL=y$/a CONFIG_SHORTCUT_FE=y' target/linux/rockchip/armv8/config-6.18
-sed -i '/^CONFIG_ARM64_4K_PAGES=y$/a CONFIG_ARM64_BRBE=y' target/linux/rockchip/armv8/config-6.18
 
 # libnftnl
 rm -rf package/libs/libnftnl/patches
