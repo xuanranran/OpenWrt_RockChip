@@ -39,6 +39,3 @@ sed -i 's/services/vpn/g' customfeeds/luci/applications/luci-app-tailscale-commu
 # other
 rm -rf package/base-files/files/etc/banner
 cp -f $GITHUB_WORKSPACE/data/banner package/base-files/files/etc/banner
-
-# rockchip test kernel-6.18
-sed -i "s/6.12/6.18/g" target/linux/rockchip/Makefile
