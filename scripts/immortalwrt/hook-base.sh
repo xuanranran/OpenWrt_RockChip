@@ -20,6 +20,9 @@ sed -i '/PKG_BUILD_PARALLEL/aPKG_BUILD_FLAGS:=no-mold' customfeeds/packages/util
 # Realtek Wireless driver - RTL8822CS & RTL8852AU
 git clone https://$github/sbwml/package_kernel_rtl8822cs package/kernel/rtl8822cs
 git clone https://$github/sbwml/package_kernel_rtl8852au package/kernel/rtl8852au
+# rtl8822cs: struct sdio_driver::shutdown only exists since linux 6.19, keep the
+# legacy device_driver::shutdown path on older kernels (fixes build on 6.18.x)
+sed -i 's/KERNEL_VERSION(6, 12, 0)/KERNEL_VERSION(6, 19, 0)/g' package/kernel/rtl8822cs/src/os_dep/linux/sdio_intf.c
 
 # GCC Optimization level -O3
 curl -s $mirror/openwrt/patch/target-modify_for_aarch64_x86_64.patch | patch -p1
