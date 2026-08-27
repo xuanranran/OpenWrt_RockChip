@@ -39,3 +39,18 @@ sed -i 's/services/vpn/g' customfeeds/luci/applications/luci-app-tailscale-commu
 # other
 rm -rf package/base-files/files/etc/banner
 cp -f $GITHUB_WORKSPACE/data/banner package/base-files/files/etc/banner
+
+# Add private cnspeedtest packages
+rm -rf package/community/openwrt-cnspeedtest
+if [ -z "$CNSPEEDTEST_TOKEN" ]; then
+  echo "Error: CNSPEEDTEST_TOKEN is not configured"
+  exit 1
+fi
+CNSPEEDTEST_AUTH="$(printf 'x-access-token:%s' "$CNSPEEDTEST_TOKEN" | base64 | tr -d '\n')"
+GIT_CONFIG_COUNT=1 \
+GIT_CONFIG_KEY_0=http.https://github.com/.extraheader \
+GIT_CONFIG_VALUE_0="AUTHORIZATION: basic $CNSPEEDTEST_AUTH" \
+git clone --depth=1 --branch master \
+  https://github.com/xuanranran/openwrt-cnspeedtest.git \
+  package/community/openwrt-cnspeedtest
+unset CNSPEEDTEST_AUTH
