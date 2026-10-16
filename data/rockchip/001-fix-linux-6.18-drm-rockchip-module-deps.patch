@@ -1,8 +1,0 @@
---- a/target/linux/rockchip/modules.mk
-+++ b/target/linux/rockchip/modules.mk
-@@ -8,3 +8,4 @@ define KernelPackage/drm-rockchip
-   DEPENDS:=@TARGET_rockchip +kmod-backlight +kmod-drm-kms-helper \
--	+kmod-multimedia-input +kmod-drm-display-helper +kmod-cec-core
-+	+kmod-multimedia-input +kmod-drm-display-helper +kmod-cec-core \
-+	+LINUX_6_18:kmod-drm-client-lib
-   KCONFIG:= \
