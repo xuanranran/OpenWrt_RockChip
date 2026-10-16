@@ -116,10 +116,7 @@ cp -f $GITHUB_WORKSPACE/data/patches/quectel-cm/030-gcc16.patch customfeeds/pack
 
 sed -i '/^CONFIG_PAGE_POOL=y$/a CONFIG_SHORTCUT_FE=y' target/linux/rockchip/armv8/config-6.18
 
-# libnftnl
-rm -rf package/libs/libnftnl/patches
-# nftables
-rm -rf package/network/utils/nftables/patches
+# Preserve ImmortalWrt fullcone patches; hook-base.sh adds BCM support.
 
 # del packages
 rm -rf customfeeds/packages/net/onionshare-cli
