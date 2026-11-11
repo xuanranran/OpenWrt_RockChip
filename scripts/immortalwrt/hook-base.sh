@@ -17,6 +17,9 @@ sed -i '/"@OPENWRT": \[/a\\t\t"https://source.cooluc.com",' scripts/projectsmirr
 # attr no-mold
 sed -i '/PKG_BUILD_PARALLEL/aPKG_BUILD_FLAGS:=no-mold' customfeeds/packages/utils/attr/Makefile
 
+# r8125: disable Energy Efficient Ethernet by default
+patch --batch --forward -p1 < "$GITHUB_WORKSPACE/data/patches/r8125/001-disable-eee-by-default.patch"
+
 # Realtek Wireless driver - RTL8822CS & RTL8852AU
 # rtl8822cs is a fork carrying the linux 6.18.x / backports 7.2 build fixes
 git clone https://$github/xuanranran/package_kernel_rtl8822cs package/kernel/rtl8822cs

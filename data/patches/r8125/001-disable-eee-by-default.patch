@@ -1,0 +1,19 @@
+From: sbwml <admin@cooluc.com>
+Subject: [PATCH] r8125: disable Energy Efficient Ethernet (EEE) by default
+
+Adapt the upstream build option to the ImmortalWrt package recipe.
+
+Upstream: https://github.com/sbwml/package_kernel_r8125/commit/93d4735e5ef2f6bac9cc887a8f633013d6f5f08b
+Signed-off-by: sbwml <admin@cooluc.com>
+Signed-off-by: Lovin Yarn <juanshengyuan@gmail.com>
+---
+--- a/package/kernel/r8125/Makefile
++++ b/package/kernel/r8125/Makefile
+@@ -28,6 +28,7 @@
+ 	+$(KERNEL_MAKE) $(PKG_JOBS) \
+ 		M="$(PKG_BUILD_DIR)/src" \
+ 		CONFIG_ASPM=n \
++		ENABLE_EEE=n \
+ 		ENABLE_MULTIPLE_TX_QUEUE=y \
+ 		ENABLE_RSS_SUPPORT=y \
+ 		modules
