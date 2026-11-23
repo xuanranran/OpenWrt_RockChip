@@ -1,0 +1,1041 @@
+Subject: [PATCH] rockchip: enable RK3576 Rocket NPU and VDPU383 on NanoPi R76S
+
+Backport Jiaxing Hu's RK3576 Rocket v17 driver, bindings and power domain
+series to Linux 6.18.65, including the prerequisite Rockchip IOMMU
+clock fix. Keep RK3576 SoC nodes disabled by default and enable
+them on the NanoPi R76S with its existing RK806 NPU supply. Add Detlev
+Casanova's VDPU383 nodes with the sorted register blocks.
+
+Link: https://lore.kernel.org/all/cover.1794615324.git.gahing@gahingwoo.com/
+Link: https://lore.kernel.org/all/cover.1794615323.git.gahing@gahingwoo.com/
+Link: https://github.com/torvalds/linux/commit/841363ebb5082a06c69ac34719e26659fe63dbd6
+Link: https://lkml.iu.edu/hypermail/linux/kernel/2510.2/11027.html
+Link: https://lore.kernel.org/linux-media/20260226-vdec-reg-order-rk3576-v4-2-b8d72dc75250@collabora.com/
+
+--- a/Documentation/devicetree/bindings/iommu/rockchip,iommu.yaml
++++ b/Documentation/devicetree/bindings/iommu/rockchip,iommu.yaml
+@@ -26,6 +26,7 @@
+       - items:
+           - enum:
+               - rockchip,rk3576-iommu
++              - rockchip,rk3576-npu-iommu
+               - rockchip,rk3588-iommu
+           - const: rockchip,rk3568-iommu
+ 
+@@ -42,14 +43,20 @@
+     minItems: 1
+ 
+   clocks:
++    minItems: 2
+     items:
+       - description: Core clock
+       - description: Interface clock
++      - description: Convolution buffer core clock
++      - description: Convolution buffer interface clock
+ 
+   clock-names:
++    minItems: 2
+     items:
+       - const: aclk
+       - const: iface
++      - const: aclk_cbuf
++      - const: hclk_cbuf
+ 
+   "#iommu-cells":
+     const: 0
+@@ -72,6 +79,25 @@
+   - clock-names
+   - "#iommu-cells"
+ 
++allOf:
++  - if:
++      properties:
++        compatible:
++          contains:
++            const: rockchip,rk3576-npu-iommu
++    then:
++      properties:
++        clocks:
++          minItems: 4
++        clock-names:
++          minItems: 4
++    else:
++      properties:
++        clocks:
++          maxItems: 2
++        clock-names:
++          maxItems: 2
++
+ additionalProperties: false
+ 
+ examples:
+--- a/Documentation/devicetree/bindings/npu/rockchip,rk3588-rknn-core.yaml
++++ b/Documentation/devicetree/bindings/npu/rockchip,rk3588-rknn-core.yaml
+@@ -21,6 +21,7 @@
+ 
+   compatible:
+     enum:
++      - rockchip,rk3576-rknn-core
+       - rockchip,rk3588-rknn-core
+ 
+   reg:
+@@ -33,14 +34,18 @@
+       - const: core # Main NPU core processing unit registers
+ 
+   clocks:
+-    maxItems: 4
++    minItems: 4
++    maxItems: 6
+ 
+   clock-names:
++    minItems: 4
+     items:
+       - const: aclk
+       - const: hclk
+       - const: npu
+       - const: pclk
++      - const: aclk_cbuf
++      - const: hclk_cbuf
+ 
+   interrupts:
+     maxItems: 1
+@@ -54,9 +59,11 @@
+     maxItems: 1
+ 
+   resets:
++    minItems: 1
+     maxItems: 2
+ 
+   reset-names:
++    minItems: 1
+     items:
+       - const: srst_a
+       - const: srst_h
+@@ -75,7 +82,36 @@
+   - resets
+   - reset-names
+   - npu-supply
+-  - sram-supply
++
++allOf:
++  - if:
++      properties:
++        compatible:
++          contains:
++            const: rockchip,rk3588-rknn-core
++    then:
++      properties:
++        clocks:
++          maxItems: 4
++        clock-names:
++          maxItems: 4
++        resets:
++          minItems: 2
++        reset-names:
++          minItems: 2
++      required:
++        - sram-supply
++    else:
++      properties:
++        clocks:
++          minItems: 6
++        clock-names:
++          minItems: 6
++        resets:
++          maxItems: 1
++        reset-names:
++          maxItems: 1
++        sram-supply: false
+ 
+ additionalProperties: false
+ 
+--- a/arch/arm64/boot/dts/rockchip/rk3576-nanopi-r76s.dts
++++ b/arch/arm64/boot/dts/rockchip/rk3576-nanopi-r76s.dts
+@@ -731,6 +731,10 @@
+ 	};
+ };
+ 
++&pd_npu {
++	domain-supply = <&vdd_npu_s0>;
++};
++
+ &pinctrl {
+ 	bt {
+ 		bt_reg_on_h: bt-reg-on-h {
+@@ -809,6 +813,24 @@
+ 			rockchip,pins = <1 RK_PC2 RK_FUNC_GPIO &pcfg_pull_none>;
+ 		};
+ 	};
++};
++
++&rknn_core_0 {
++	npu-supply = <&vdd_npu_s0>;
++	status = "okay";
++};
++
++&rknn_core_1 {
++	npu-supply = <&vdd_npu_s0>;
++	status = "okay";
++};
++
++&rknn_mmu_0 {
++	status = "okay";
++};
++
++&rknn_mmu_1 {
++	status = "okay";
+ };
+ 
+ &sai6 {
+@@ -916,6 +938,14 @@
+ 	status = "okay";
+ };
+ 
++&vdec {
++	status = "okay";
++};
++
++&vdec_mmu {
++	status = "okay";
++};
++
+ &vop {
+ 	status = "okay";
+ };
+--- a/arch/arm64/boot/dts/rockchip/rk3576.dtsi
++++ b/arch/arm64/boot/dts/rockchip/rk3576.dtsi
+@@ -1072,7 +1072,7 @@
+ 				#address-cells = <1>;
+ 				#size-cells = <0>;
+ 
+-				power-domain@RK3576_PD_NPU {
++				pd_npu: power-domain@RK3576_PD_NPU {
+ 					reg = <RK3576_PD_NPU>;
+ 					#power-domain-cells = <1>;
+ 					#address-cells = <1>;
+@@ -1291,6 +1291,74 @@
+ 			};
+ 		};
+ 
++		rknn_core_0: npu@27700000 {
++			compatible = "rockchip,rk3576-rknn-core";
++			reg = <0x0 0x27700000 0x0 0x1000>,
++			      <0x0 0x27701000 0x0 0x1000>,
++			      <0x0 0x27703000 0x0 0x1000>;
++			reg-names = "pc", "cna", "core";
++			interrupts = <GIC_SPI 247 IRQ_TYPE_LEVEL_HIGH>;
++			clocks = <&cru ACLK_RKNN0>, <&cru HCLK_RKNN_ROOT>,
++				 <&cru CLK_RKNN_DSU0>, <&cru PCLK_NPUTOP_ROOT>,
++				 <&cru ACLK_RKNN_CBUF>, <&cru HCLK_RKNN_CBUF>;
++			clock-names = "aclk", "hclk", "npu", "pclk",
++				      "aclk_cbuf", "hclk_cbuf";
++			assigned-clocks = <&cru CLK_RKNN_DSU0>;
++			assigned-clock-rates = <594000000>;
++			resets = <&cru SRST_A_RKNN0>;
++			reset-names = "srst_a";
++			power-domains = <&power RK3576_PD_NPU0>;
++			iommus = <&rknn_mmu_0>;
++			status = "disabled";
++		};
++
++		rknn_mmu_0: iommu@27702000 {
++			compatible = "rockchip,rk3576-npu-iommu", "rockchip,rk3568-iommu";
++			reg = <0x0 0x27702000 0x0 0x100>,
++			      <0x0 0x27702100 0x0 0x100>;
++			interrupts = <GIC_SPI 247 IRQ_TYPE_LEVEL_HIGH>;
++			clocks = <&cru ACLK_RKNN0>, <&cru HCLK_RKNN_ROOT>,
++				 <&cru ACLK_RKNN_CBUF>, <&cru HCLK_RKNN_CBUF>;
++			clock-names = "aclk", "iface", "aclk_cbuf", "hclk_cbuf";
++			#iommu-cells = <0>;
++			power-domains = <&power RK3576_PD_NPU0>;
++			status = "disabled";
++		};
++
++		rknn_core_1: npu@27708000 {
++			compatible = "rockchip,rk3576-rknn-core";
++			reg = <0x0 0x27708000 0x0 0x1000>,
++			      <0x0 0x27709000 0x0 0x1000>,
++			      <0x0 0x2770b000 0x0 0x1000>;
++			reg-names = "pc", "cna", "core";
++			interrupts = <GIC_SPI 248 IRQ_TYPE_LEVEL_HIGH>;
++			clocks = <&cru ACLK_RKNN1>, <&cru HCLK_RKNN_ROOT>,
++				 <&cru CLK_RKNN_DSU0>, <&cru PCLK_NPUTOP_ROOT>,
++				 <&cru ACLK_RKNN_CBUF>, <&cru HCLK_RKNN_CBUF>;
++			clock-names = "aclk", "hclk", "npu", "pclk",
++				      "aclk_cbuf", "hclk_cbuf";
++			assigned-clocks = <&cru CLK_RKNN_DSU0>;
++			assigned-clock-rates = <594000000>;
++			resets = <&cru SRST_A_RKNN1>;
++			reset-names = "srst_a";
++			power-domains = <&power RK3576_PD_NPU1>;
++			iommus = <&rknn_mmu_1>;
++			status = "disabled";
++		};
++
++		rknn_mmu_1: iommu@2770a000 {
++			compatible = "rockchip,rk3576-npu-iommu", "rockchip,rk3568-iommu";
++			reg = <0x0 0x2770a000 0x0 0x100>,
++			      <0x0 0x2770a100 0x0 0x100>;
++			interrupts = <GIC_SPI 248 IRQ_TYPE_LEVEL_HIGH>;
++			clocks = <&cru ACLK_RKNN1>, <&cru HCLK_RKNN_ROOT>,
++				 <&cru ACLK_RKNN_CBUF>, <&cru HCLK_RKNN_CBUF>;
++			clock-names = "aclk", "iface", "aclk_cbuf", "hclk_cbuf";
++			#iommu-cells = <0>;
++			power-domains = <&power RK3576_PD_NPU1>;
++			status = "disabled";
++		};
++
+ 		gpu: gpu@27800000 {
+ 			compatible = "rockchip,rk3576-mali", "arm,mali-bifrost";
+ 			reg = <0x0 0x27800000 0x0 0x20000>;
+@@ -1306,6 +1374,43 @@
+ 			operating-points-v2 = <&gpu_opp_table>;
+ 			power-domains = <&power RK3576_PD_GPU>;
+ 			#cooling-cells = <2>;
++			status = "disabled";
++		};
++
++		vdec: video-codec@27b00000 {
++			compatible = "rockchip,rk3576-vdec";
++			reg = <0x0 0x27b00000 0x0 0x100>,
++			      <0x0 0x27b00100 0x0 0x500>,
++			      <0x0 0x27b00600 0x0 0x100>;
++			reg-names = "link", "function", "cache";
++			interrupts = <GIC_SPI 308 IRQ_TYPE_LEVEL_HIGH>;
++			clocks = <&cru ACLK_RKVDEC_ROOT>, <&cru HCLK_RKVDEC>,
++				 <&cru ACLK_RKVDEC_ROOT_BAK>, <&cru CLK_RKVDEC_CORE>,
++				 <&cru CLK_RKVDEC_HEVC_CA>;
++			clock-names = "axi", "ahb", "cabac", "core", "hevc_cabac";
++			assigned-clocks = <&cru ACLK_RKVDEC_ROOT>, <&cru CLK_RKVDEC_CORE>,
++					  <&cru ACLK_RKVDEC_ROOT_BAK>, <&cru CLK_RKVDEC_HEVC_CA>;
++			assigned-clock-rates = <600000000>, <600000000>,
++					       <500000000>, <1000000000>;
++			iommus = <&vdec_mmu>;
++			power-domains = <&power RK3576_PD_VDEC>;
++			resets = <&cru SRST_A_RKVDEC_BIU>, <&cru SRST_H_RKVDEC_BIU>,
++				 <&cru SRST_H_RKVDEC>, <&cru SRST_RKVDEC_CORE>,
++				 <&cru SRST_RKVDEC_HEVC_CA>;
++			reset-names = "axi", "ahb", "cabac", "core", "hevc_cabac";
++			sram = <&rkvdec_sram>;
++			status = "disabled";
++		};
++
++		vdec_mmu: iommu@27b00800 {
++			compatible = "rockchip,rk3576-iommu", "rockchip,rk3568-iommu";
++			reg = <0x0 0x27b00800 0x0 0x40>, <0x0 0x27b00900 0x0 0x40>;
++			interrupts = <GIC_SPI 309 IRQ_TYPE_LEVEL_HIGH>;
++			clocks = <&cru CLK_RKVDEC_CORE>, <&cru HCLK_RKVDEC>;
++			clock-names = "aclk", "iface";
++			power-domains = <&power RK3576_PD_VDEC>;
++			rockchip,disable-mmu-reset;
++			#iommu-cells = <0>;
+ 			status = "disabled";
+ 		};
+ 
+@@ -2897,6 +3002,7 @@
+ 			/* start address and size should be 4k align */
+ 			rkvdec_sram: rkvdec-sram@0 {
+ 				reg = <0x0 0x78000>;
++				pool;
+ 			};
+ 		};
+ 
+--- a/drivers/accel/rocket/rocket_core.c
++++ b/drivers/accel/rocket/rocket_core.c
+@@ -23,12 +23,18 @@
+ 
+ 	core->resets[0].id = "srst_a";
+ 	core->resets[1].id = "srst_h";
+-	err = devm_reset_control_bulk_get_exclusive(&pdev->dev, ARRAY_SIZE(core->resets),
++	err = devm_reset_control_bulk_get_exclusive(&pdev->dev, core->soc->num_resets,
+ 						    core->resets);
+ 	if (err)
+ 		return dev_err_probe(dev, err, "failed to get resets for core %d\n", core->index);
+ 
+-	err = devm_clk_bulk_get(dev, ARRAY_SIZE(core->clks), core->clks);
++	core->clks[ROCKET_CLK_ACLK].id = "aclk";
++	core->clks[ROCKET_CLK_HCLK].id = "hclk";
++	core->clks[ROCKET_CLK_NPU].id = "npu";
++	core->clks[ROCKET_CLK_PCLK].id = "pclk";
++	core->clks[ROCKET_CLK_ACLK_CBUF].id = "aclk_cbuf";
++	core->clks[ROCKET_CLK_HCLK_CBUF].id = "hclk_cbuf";
++	err = devm_clk_bulk_get(dev, core->soc->num_clks, core->clks);
+ 	if (err)
+ 		return dev_err_probe(dev, err, "failed to get clocks for core %d\n", core->index);
+ 
+@@ -105,9 +111,9 @@
+ 
+ void rocket_core_reset(struct rocket_core *core)
+ {
+-	reset_control_bulk_assert(ARRAY_SIZE(core->resets), core->resets);
++	reset_control_bulk_assert(core->soc->num_resets, core->resets);
+ 
+ 	udelay(10);
+ 
+-	reset_control_bulk_deassert(ARRAY_SIZE(core->resets), core->resets);
++	reset_control_bulk_deassert(core->soc->num_resets, core->resets);
+ }
+--- a/drivers/accel/rocket/rocket_core.h
++++ b/drivers/accel/rocket/rocket_core.h
+@@ -27,16 +27,34 @@
+ #define rocket_core_writel(core, reg, value) \
+ 	writel(value, (core)->core_iomem + (REG_CORE_##reg) - REG_CORE_S_STATUS)
+ 
++enum rocket_clk {
++	ROCKET_CLK_ACLK,
++	ROCKET_CLK_HCLK,
++	ROCKET_CLK_NPU,
++	ROCKET_CLK_PCLK,
++	ROCKET_CLK_ACLK_CBUF,
++	ROCKET_CLK_HCLK_CBUF,
++	ROCKET_CLK_MAX,
++};
++
++struct rocket_soc_data {
++	unsigned int num_clks;
++	unsigned int num_resets;
++	bool task_con_16bit;
++	u32 hw_version;
++};
++
+ struct rocket_core {
+ 	struct device *dev;
+ 	struct rocket_device *rdev;
++	const struct rocket_soc_data *soc;
+ 	unsigned int index;
+ 
+ 	int irq;
+ 	void __iomem *pc_iomem;
+ 	void __iomem *cna_iomem;
+ 	void __iomem *core_iomem;
+-	struct clk_bulk_data clks[4];
++	struct clk_bulk_data clks[ROCKET_CLK_MAX];
+ 	struct reset_control_bulk_data resets[2];
+ 
+ 	struct iommu_group *iommu_group;
+--- a/drivers/accel/rocket/rocket_device.c
++++ b/drivers/accel/rocket/rocket_device.c
+@@ -9,6 +9,7 @@
+ #include <linux/of.h>
+ 
+ #include "rocket_device.h"
++#include "rocket_drv.h"
+ 
+ struct rocket_device *rocket_device_init(struct platform_device *pdev,
+ 					 const struct drm_driver *rocket_drm_driver)
+@@ -27,7 +28,7 @@
+ 	ddev = &rdev->ddev;
+ 	dev_set_drvdata(dev, rdev);
+ 
+-	for_each_compatible_node(core_node, NULL, "rockchip,rk3588-rknn-core")
++	for_each_matching_node(core_node, rocket_dt_match)
+ 		if (of_device_is_available(core_node))
+ 			num_cores++;
+ 
+--- a/drivers/accel/rocket/rocket_drv.c
++++ b/drivers/accel/rocket/rocket_drv.c
+@@ -5,6 +5,7 @@
+ #include <drm/drm_drv.h>
+ #include <drm/drm_gem.h>
+ #include <drm/drm_ioctl.h>
++#include <drm/drm_print.h>
+ #include <drm/rocket_accel.h>
+ #include <linux/clk.h>
+ #include <linux/err.h>
+@@ -129,6 +130,31 @@
+ 	module_put(THIS_MODULE);
+ }
+ 
++static int
++rocket_ioctl_get_param(struct drm_device *dev, void *data, struct drm_file *file)
++{
++	struct rocket_device *rdev = to_rocket_device(dev);
++	struct drm_rocket_get_param *args = data;
++	const struct rocket_soc_data *soc;
++
++	if (args->reserved != 0) {
++		drm_dbg(dev, "Reserved field in drm_rocket_get_param struct should be 0.\n");
++		return -EINVAL;
++	}
++
++	soc = READ_ONCE(rdev->cores[0].soc);
++	if (!soc)
++		return -ENODEV;
++
++	switch (args->param) {
++	case DRM_ROCKET_PARAM_HW_VERSION:
++		args->value = soc->hw_version;
++		return 0;
++	default:
++		return -EINVAL;
++	}
++}
++
+ static const struct drm_ioctl_desc rocket_drm_driver_ioctls[] = {
+ #define ROCKET_IOCTL(n, func) \
+ 	DRM_IOCTL_DEF_DRV(ROCKET_##n, rocket_ioctl_##func, 0)
+@@ -137,6 +163,7 @@
+ 	ROCKET_IOCTL(SUBMIT, submit),
+ 	ROCKET_IOCTL(PREP_BO, prep_bo),
+ 	ROCKET_IOCTL(FINI_BO, fini_bo),
++	ROCKET_IOCTL(GET_PARAM, get_param),
+ };
+ 
+ DEFINE_DRM_ACCEL_FOPS(rocket_accel_driver_fops);
+@@ -159,7 +186,13 @@
+ 
+ static int rocket_probe(struct platform_device *pdev)
+ {
++	const struct rocket_soc_data *soc = of_device_get_match_data(&pdev->dev);
+ 	int ret;
++
++	if (!soc) {
++		dev_err(&pdev->dev, "no match data for this device\n");
++		return -ENODEV;
++	}
+ 
+ 	if (rdev == NULL) {
+ 		/* First core probing, initialize DRM device. */
+@@ -179,6 +212,7 @@
+ 
+ 	rdev->cores[core].rdev = rdev;
+ 	rdev->cores[core].dev = &pdev->dev;
++	rdev->cores[core].soc = soc;
+ 	rdev->cores[core].index = core;
+ 
+ 	rdev->num_cores++;
+@@ -215,11 +249,26 @@
+ 	}
+ }
+ 
+-static const struct of_device_id dt_match[] = {
+-	{ .compatible = "rockchip,rk3588-rknn-core" },
++static const struct rocket_soc_data rk3588_soc_data = {
++	.num_clks = 4,
++	.num_resets = 2,
++	.task_con_16bit = false,
++	.hw_version = DRM_ROCKET_HW_RK3588,
++};
++
++static const struct rocket_soc_data rk3576_soc_data = {
++	.num_clks = 6,
++	.num_resets = 1,
++	.task_con_16bit = true,
++	.hw_version = DRM_ROCKET_HW_RK3576,
++};
++
++const struct of_device_id rocket_dt_match[] = {
++	{ .compatible = "rockchip,rk3588-rknn-core", .data = &rk3588_soc_data },
++	{ .compatible = "rockchip,rk3576-rknn-core", .data = &rk3576_soc_data },
+ 	{}
+ };
+-MODULE_DEVICE_TABLE(of, dt_match);
++MODULE_DEVICE_TABLE(of, rocket_dt_match);
+ 
+ static int find_core_for_dev(struct device *dev)
+ {
+@@ -242,7 +291,7 @@
+ 	if (core < 0)
+ 		return -ENODEV;
+ 
+-	err = clk_bulk_prepare_enable(ARRAY_SIZE(rdev->cores[core].clks), rdev->cores[core].clks);
++	err = clk_bulk_prepare_enable(rdev->cores[core].soc->num_clks, rdev->cores[core].clks);
+ 	if (err) {
+ 		dev_err(dev, "failed to enable (%d) clocks for core %d\n", err, core);
+ 		return err;
+@@ -262,7 +311,7 @@
+ 	if (!rocket_job_is_idle(&rdev->cores[core]))
+ 		return -EBUSY;
+ 
+-	clk_bulk_disable_unprepare(ARRAY_SIZE(rdev->cores[core].clks), rdev->cores[core].clks);
++	clk_bulk_disable_unprepare(rdev->cores[core].soc->num_clks, rdev->cores[core].clks);
+ 
+ 	return 0;
+ }
+@@ -278,7 +327,7 @@
+ 	.driver	 = {
+ 		.name = "rocket",
+ 		.pm = pm_ptr(&rocket_pm_ops),
+-		.of_match_table = dt_match,
++		.of_match_table = rocket_dt_match,
+ 	},
+ };
+ 
+--- a/drivers/accel/rocket/rocket_drv.h
++++ b/drivers/accel/rocket/rocket_drv.h
+@@ -6,10 +6,12 @@
+ 
+ #include <drm/drm_mm.h>
+ #include <drm/gpu_scheduler.h>
++#include <linux/mod_devicetable.h>
+ 
+ #include "rocket_device.h"
+ 
+ extern const struct dev_pm_ops rocket_pm_ops;
++extern const struct of_device_id rocket_dt_match[];
+ 
+ struct rocket_iommu_domain {
+ 	struct iommu_domain *domain;
+--- a/drivers/accel/rocket/rocket_job.c
++++ b/drivers/accel/rocket/rocket_job.c
+@@ -21,6 +21,11 @@
+ 
+ #define JOB_TIMEOUT_MS 500
+ 
++#define RK3576_PC_TASK_CON_TASK_NUMBER(n)	((n) & 0xffff)
++#define RK3576_PC_TASK_CON_PP_EN		BIT(16)
++#define RK3576_PC_TASK_CON_COUNT_CLEAR		BIT(17)
++#define RK3576_PC_TASK_CON_LAST_LAYER_CLEAR	BIT(18)
++
+ static struct rocket_job *
+ to_rocket_job(struct drm_sched_job *sched_job)
+ {
+@@ -142,10 +147,17 @@
+ 	rocket_pc_writel(core, INTERRUPT_MASK, PC_INTERRUPT_MASK_DPU_0 | PC_INTERRUPT_MASK_DPU_1);
+ 	rocket_pc_writel(core, INTERRUPT_CLEAR, PC_INTERRUPT_CLEAR_DPU_0 | PC_INTERRUPT_CLEAR_DPU_1);
+ 
+-	rocket_pc_writel(core, TASK_CON, PC_TASK_CON_RESERVED_0(1) |
+-					 PC_TASK_CON_TASK_COUNT_CLEAR(1) |
+-					 PC_TASK_CON_TASK_NUMBER(1) |
+-					 PC_TASK_CON_TASK_PP_EN(1));
++	if (core->soc->task_con_16bit)
++		rocket_pc_writel(core, TASK_CON,
++				 RK3576_PC_TASK_CON_LAST_LAYER_CLEAR |
++				 RK3576_PC_TASK_CON_COUNT_CLEAR |
++				 RK3576_PC_TASK_CON_PP_EN |
++				 RK3576_PC_TASK_CON_TASK_NUMBER(1));
++	else
++		rocket_pc_writel(core, TASK_CON, PC_TASK_CON_RESERVED_0(1) |
++						 PC_TASK_CON_TASK_COUNT_CLEAR(1) |
++						 PC_TASK_CON_TASK_NUMBER(1) |
++						 PC_TASK_CON_TASK_PP_EN(1));
+ 
+ 	rocket_pc_writel(core, TASK_DMA_BASE_ADDR, PC_TASK_DMA_BASE_ADDR_DMA_BASE_ADDR(0x0));
+ 
+@@ -341,43 +353,68 @@
+ 	return ERR_PTR(ret);
+ }
+ 
++static void rocket_job_next_locked(struct rocket_core *core)
++{
++	lockdep_assert_held(&core->job_lock);
++
++	if (!core->in_flight_job)
++		return;
++
++	if (core->in_flight_job->next_task_idx < core->in_flight_job->task_count) {
++		rocket_job_hw_submit(core, core->in_flight_job);
++		return;
++	}
++
++	iommu_detach_group(NULL, iommu_group_get(core->dev));
++	dma_fence_signal(core->in_flight_job->done_fence);
++	pm_runtime_put_autosuspend(core->dev);
++	core->in_flight_job = NULL;
++}
++
+ static void rocket_job_handle_irq(struct rocket_core *core)
+ {
+ 	pm_runtime_mark_last_busy(core->dev);
+ 
+-	rocket_pc_writel(core, OPERATION_ENABLE, 0x0);
+-	rocket_pc_writel(core, INTERRUPT_CLEAR, 0x1ffff);
+-
+-	scoped_guard(mutex, &core->job_lock)
+-		if (core->in_flight_job) {
+-			if (core->in_flight_job->next_task_idx < core->in_flight_job->task_count) {
+-				rocket_job_hw_submit(core, core->in_flight_job);
+-				return;
+-			}
+-
+-			iommu_detach_group(NULL, iommu_group_get(core->dev));
+-			dma_fence_signal(core->in_flight_job->done_fence);
+-			pm_runtime_put_autosuspend(core->dev);
+-			core->in_flight_job = NULL;
+-		}
++	scoped_guard(mutex, &core->job_lock) {
++		/*
++		 * Stopping the block belongs under the lock. hw_submit() writes
++		 * OPERATION_ENABLE too, and outside the lock this zero can land
++		 * after that one and stop a task that has only just started.
++		 */
++		rocket_pc_writel(core, OPERATION_ENABLE, 0x0);
++		rocket_pc_writel(core, INTERRUPT_CLEAR, 0x1ffff);
++
++		rocket_job_next_locked(core);
++	}
+ }
+ 
+ static void
+ rocket_reset(struct rocket_core *core, struct drm_sched_job *bad)
+ {
++	bool put_job_ref;
++
+ 	if (!atomic_read(&core->reset.pending))
+ 		return;
+ 
+ 	drm_sched_stop(&core->sched, bad);
++
++	scoped_guard(mutex, &core->job_lock) {
++		if (pm_runtime_get_if_active(core->dev) > 0) {
++			rocket_pc_writel(core, INTERRUPT_MASK, 0x0);
++			rocket_pc_writel(core, INTERRUPT_CLEAR, 0x1ffff);
++			pm_runtime_put_autosuspend(core->dev);
++		}
++	}
++
++	synchronize_irq(core->irq);
+ 
+ 	/*
+ 	 * Remaining interrupts have been handled, but we might still have
+ 	 * stuck jobs. Let's make sure the PM counters stay balanced by
+-	 * manually calling pm_runtime_put_noidle().
++	 * dropping the job's reference once the core has been reset.
+ 	 */
+ 	scoped_guard(mutex, &core->job_lock) {
+-		if (core->in_flight_job)
+-			pm_runtime_put_noidle(core->dev);
++		put_job_ref = core->in_flight_job;
+ 
+ 		iommu_detach_group(NULL, core->iommu_group);
+ 
+@@ -386,6 +423,9 @@
+ 
+ 	/* Proceed with reset now. */
+ 	rocket_core_reset(core);
++
++	if (put_job_ref)
++		pm_runtime_put_autosuspend(core->dev);
+ 
+ 	/* NPU has been reset, we can clear the reset pending bit. */
+ 	atomic_set(&core->reset.pending, 0);
+--- a/drivers/iommu/rockchip-iommu.c
++++ b/drivers/iommu/rockchip-iommu.c
+@@ -93,11 +93,6 @@
+ 	struct device *dma_dev;
+ 
+ 	struct iommu_domain domain;
+-};
+-
+-/* list of clocks required by IOMMU */
+-static const char * const rk_iommu_clocks[] = {
+-	"aclk", "iface",
+ };
+ 
+ struct rk_iommu_ops {
+@@ -1275,25 +1270,20 @@
+ 	iommu->reset_disabled = device_property_read_bool(dev,
+ 					"rockchip,disable-mmu-reset");
+ 
+-	iommu->num_clocks = ARRAY_SIZE(rk_iommu_clocks);
+-	iommu->clocks = devm_kcalloc(iommu->dev, iommu->num_clocks,
+-				     sizeof(*iommu->clocks), GFP_KERNEL);
+-	if (!iommu->clocks)
+-		return -ENOMEM;
+-
+-	for (i = 0; i < iommu->num_clocks; ++i)
+-		iommu->clocks[i].id = rk_iommu_clocks[i];
+-
+ 	/*
+-	 * iommu clocks should be present for all new devices and devicetrees
+-	 * but there are older devicetrees without clocks out in the wild.
+-	 * So clocks as optional for the time being.
++	 * Take every clock the devicetree provides.  Most IOMMU instances
++	 * need exactly "aclk" + "iface", but e.g. the RK3576 NPU IOMMUs sit
++	 * behind additional gates (CBUF/DSU) whose clocks must be running
++	 * for register writes to land.  Clocks stay optional because there
++	 * are older devicetrees without clocks out in the wild.
+ 	 */
+-	err = devm_clk_bulk_get(iommu->dev, iommu->num_clocks, iommu->clocks);
++	err = devm_clk_bulk_get_all(iommu->dev, &iommu->clocks);
+ 	if (err == -ENOENT)
+ 		iommu->num_clocks = 0;
+-	else if (err)
++	else if (err < 0)
+ 		return err;
++	else
++		iommu->num_clocks = err;
+ 
+ 	err = clk_bulk_prepare(iommu->num_clocks, iommu->clocks);
+ 	if (err)
+--- a/drivers/pmdomain/rockchip/pm-domains.c
++++ b/drivers/pmdomain/rockchip/pm-domains.c
+@@ -50,6 +50,8 @@
+ 	int ack_mask;
+ 	bool active_wakeup;
+ 	bool need_regulator;
++	bool off_subtree_at_probe;
++	u32 delay_us;
+ 	int pwr_w_mask;
+ 	int req_w_mask;
+ 	int clk_ungate_mask;
+@@ -100,6 +102,7 @@
+ 	struct clk_bulk_data *clks;
+ 	struct device_node *node;
+ 	struct regulator *supply;
++	bool off_at_probe;
+ };
+ 
+ struct rockchip_pmu {
+@@ -170,7 +173,7 @@
+ 	.need_regulator = regulator,			\
+ }
+ 
+-#define DOMAIN_M_O_R_G(_name, p_offset, pwr, status, m_offset, m_status, r_status, r_offset, req, idle, ack, g_mask, wakeup)	\
++#define DOMAIN_M_O_R_G(_name, p_offset, pwr, status, m_offset, m_status, r_status, r_offset, req, idle, ack, g_mask, delay, wakeup, regulator)	\
+ {							\
+ 	.name = _name,					\
+ 	.pwr_offset = p_offset,				\
+@@ -185,8 +188,11 @@
+ 	.req_mask = (req),				\
+ 	.idle_mask = (idle),				\
+ 	.clk_ungate_mask = (g_mask),			\
++	.delay_us = (delay),				\
+ 	.ack_mask = (ack),				\
+ 	.active_wakeup = wakeup,			\
++	.need_regulator = regulator,			\
++	.off_subtree_at_probe = regulator,		\
+ }
+ 
+ #define DOMAIN_RK3036(_name, req, ack, idle, wakeup)		\
+@@ -226,8 +232,11 @@
+ #define DOMAIN_RK3568(name, pwr, req, wakeup)		\
+ 	DOMAIN_M(name, pwr, pwr, req, req, req, wakeup)
+ 
+-#define DOMAIN_RK3576(name, p_offset, pwr, status, r_status, r_offset, req, idle, g_mask, wakeup)	\
+-	DOMAIN_M_O_R_G(name, p_offset, pwr, status, 0, r_status, r_status, r_offset, req, idle, idle, g_mask, wakeup)
++#define DOMAIN_RK3576(name, p_offset, pwr, status, r_status, r_offset, req, idle, g_mask, delay, wakeup)	\
++	DOMAIN_M_O_R_G(name, p_offset, pwr, status, 0, r_status, r_status, r_offset, req, idle, idle, g_mask, delay, wakeup, false)
++
++#define DOMAIN_RK3576_R(name, p_offset, pwr, status, r_status, r_offset, req, idle, g_mask, delay, wakeup)	\
++	DOMAIN_M_O_R_G(name, p_offset, pwr, status, 0, r_status, r_status, r_offset, req, idle, idle, g_mask, delay, wakeup, true)
+ 
+ /*
+  * Dynamic Memory Controller may need to coordinate with us -- see
+@@ -649,6 +658,10 @@
+ 		if (ret < 0)
+ 			goto out;
+ 
++		/* Some domains need to settle before the QoS registers answer. */
++		if (pd->info->delay_us)
++			udelay(pd->info->delay_us);
++
+ 		rockchip_pmu_restore_qos(pd);
+ 	}
+ 
+@@ -763,7 +776,8 @@
+ }
+ 
+ static int rockchip_pm_add_one_domain(struct rockchip_pmu *pmu,
+-				      struct device_node *node)
++				      struct device_node *node,
++				      struct rockchip_pm_domain *parent)
+ {
+ 	const struct rockchip_domain_info *pd_info;
+ 	struct rockchip_pm_domain *pd;
+@@ -879,8 +893,18 @@
+ 	 * the regulator state is unknown at probe time. Also the regulator
+ 	 * state cannot be checked, since that usually requires IP needing
+ 	 * (a different) power domain.
++	 *
++	 * The domains below such a domain have to start off too, or genpd
++	 * would see them off behind a parent that is off while the
++	 * bootloader left them on, and never idle them before the regulator
++	 * is cut. Only mark them here: the subdomains are not added yet, so
++	 * rockchip_pm_power_off_subtree() switches the whole subtree off,
++	 * children first, once it is complete.
+ 	 */
+-	if (pd->info->need_regulator)
++	pd->off_at_probe = (pd_info->off_subtree_at_probe &&
++			    of_property_present(node, "domain-supply")) ||
++			   (parent && parent->off_at_probe);
++	if (pd_info->need_regulator && !pd_info->off_subtree_at_probe)
+ 		rockchip_pd_power(pd, false);
+ 
+ 	pd->genpd.power_off = rockchip_pd_power_off;
+@@ -893,7 +917,7 @@
+ 	if (pd_info->active_wakeup)
+ 		pd->genpd.flags |= GENPD_FLAG_ACTIVE_WAKEUP;
+ 	pm_genpd_init(&pd->genpd, NULL,
+-		      !rockchip_pmu_domain_is_on(pd) ||
++		      pd->off_at_probe || !rockchip_pmu_domain_is_on(pd) ||
+ 		      (pd->info->mem_status_mask && !rockchip_pmu_domain_is_mem_on(pd)));
+ 
+ 	pmu->genpd_data.domains[id] = &pd->genpd;
+@@ -957,6 +981,41 @@
+ 	regmap_write(pmu->regmap, domain_reg_offset + 4, count);
+ }
+ 
++/*
++ * Switch off the domains marked off_at_probe below and including @np,
++ * children before their parent. If a child fails to switch off, leave its
++ * ancestors on.
++ */
++static int rockchip_pm_power_off_subtree(struct rockchip_pmu *pmu,
++					 struct device_node *np)
++{
++	struct rockchip_pm_domain *pd;
++	u32 idx;
++	int ret;
++
++	for_each_child_of_node_scoped(np, child) {
++		ret = rockchip_pm_power_off_subtree(pmu, child);
++		if (ret)
++			return ret;
++	}
++
++	if (of_property_read_u32(np, "reg", &idx) ||
++	    idx >= pmu->genpd_data.num_domains ||
++	    !pmu->genpd_data.domains[idx])
++		return 0;
++
++	pd = to_rockchip_pd(pmu->genpd_data.domains[idx]);
++	if (!pd->off_at_probe)
++		return 0;
++
++	ret = rockchip_pd_power(pd, false);
++	if (ret)
++		dev_warn(pmu->dev, "failed to switch off %s at probe: %d\n",
++			 pd->genpd.name, ret);
++
++	return ret;
++}
++
+ static int rockchip_pm_add_subdomain(struct rockchip_pmu *pmu,
+ 				     struct device_node *parent)
+ {
+@@ -975,7 +1034,8 @@
+ 		}
+ 		parent_domain = pmu->genpd_data.domains[idx];
+ 
+-		error = rockchip_pm_add_one_domain(pmu, np);
++		error = rockchip_pm_add_one_domain(pmu, np,
++						   to_rockchip_pd(parent_domain));
+ 		if (error) {
+ 			dev_err(pmu->dev, "failed to handle node %pOFn: %d\n",
+ 				np, error);
+@@ -1071,7 +1131,7 @@
+ 	guard(mutex)(&dmc_pmu_mutex);
+ 
+ 	for_each_available_child_of_node_scoped(np, node) {
+-		error = rockchip_pm_add_one_domain(pmu, node);
++		error = rockchip_pm_add_one_domain(pmu, node, NULL);
+ 		if (error) {
+ 			if (error == -EPROBE_DEFER) {
+ 				dev_dbg(dev, "skipped node %pOFn, dependencies not yet available\n",
+@@ -1089,6 +1149,9 @@
+ 				node, error);
+ 			goto err_out;
+ 		}
++
++		/* A domain left on is not fatal; carry on with the others. */
++		rockchip_pm_power_off_subtree(pmu, node);
+ 	}
+ 
+ 	if (error) {
+@@ -1287,25 +1350,25 @@
+ };
+ 
+ static const struct rockchip_domain_info rk3576_pm_domains[] = {
+-	[RK3576_PD_NPU]		= DOMAIN_RK3576("npu",    0x0, BIT(0),  BIT(0), 0,       0x0, 0,       0,       0,       false),
+-	[RK3576_PD_NVM]		= DOMAIN_RK3576("nvm",    0x0, BIT(6),  0,      BIT(6),  0x4, BIT(2),  BIT(18), BIT(2),  false),
+-	[RK3576_PD_SDGMAC]	= DOMAIN_RK3576("sdgmac", 0x0, BIT(7),  0,      BIT(7),  0x4, BIT(1),  BIT(17), 0x6,     false),
+-	[RK3576_PD_AUDIO]	= DOMAIN_RK3576("audio",  0x0, BIT(8),  0,      BIT(8),  0x4, BIT(0),  BIT(16), BIT(0),  false),
+-	[RK3576_PD_PHP]		= DOMAIN_RK3576("php",    0x0, BIT(9),  0,      BIT(9),  0x0, BIT(15), BIT(15), BIT(15), false),
+-	[RK3576_PD_SUBPHP]	= DOMAIN_RK3576("subphp", 0x0, BIT(10), 0,      BIT(10), 0x0, 0,       0,       0,       false),
+-	[RK3576_PD_VOP]		= DOMAIN_RK3576("vop",    0x0, BIT(11), 0,      BIT(11), 0x0, 0x6000,  0x6000,  0x6000,  false),
+-	[RK3576_PD_VO1]		= DOMAIN_RK3576("vo1",    0x0, BIT(14), 0,      BIT(14), 0x0, BIT(12), BIT(12), 0x7000,  false),
+-	[RK3576_PD_VO0]		= DOMAIN_RK3576("vo0",    0x0, BIT(15), 0,      BIT(15), 0x0, BIT(11), BIT(11), 0x6800,  false),
+-	[RK3576_PD_USB]		= DOMAIN_RK3576("usb",    0x4, BIT(0),  0,      BIT(16), 0x0, BIT(10), BIT(10), 0x6400,  true),
+-	[RK3576_PD_VI]		= DOMAIN_RK3576("vi",     0x4, BIT(1),  0,      BIT(17), 0x0, BIT(9),  BIT(9),  BIT(9),  false),
+-	[RK3576_PD_VEPU0]	= DOMAIN_RK3576("vepu0",  0x4, BIT(2),  0,      BIT(18), 0x0, BIT(7),  BIT(7),  0x280,   false),
+-	[RK3576_PD_VEPU1]	= DOMAIN_RK3576("vepu1",  0x4, BIT(3),  0,      BIT(19), 0x0, BIT(8),  BIT(8),  BIT(8),  false),
+-	[RK3576_PD_VDEC]	= DOMAIN_RK3576("vdec",   0x4, BIT(4),  0,      BIT(20), 0x0, BIT(6),  BIT(6),  BIT(6),  false),
+-	[RK3576_PD_VPU]		= DOMAIN_RK3576("vpu",    0x4, BIT(5),  0,      BIT(21), 0x0, BIT(5),  BIT(5),  BIT(5),  false),
+-	[RK3576_PD_NPUTOP]	= DOMAIN_RK3576("nputop", 0x4, BIT(6),  0,      BIT(22), 0x0, 0x18,    0x18,    0x18,    false),
+-	[RK3576_PD_NPU0]	= DOMAIN_RK3576("npu0",   0x4, BIT(7),  0,      BIT(23), 0x0, BIT(1),  BIT(1),  0x1a,    false),
+-	[RK3576_PD_NPU1]	= DOMAIN_RK3576("npu1",   0x4, BIT(8),  0,      BIT(24), 0x0, BIT(2),  BIT(2),  0x1c,    false),
+-	[RK3576_PD_GPU]		= DOMAIN_RK3576("gpu",    0x4, BIT(9),  0,      BIT(25), 0x0, BIT(0),  BIT(0),  BIT(0),  false),
++	[RK3576_PD_NPU]		= DOMAIN_RK3576_R("npu",  0x0, BIT(0),  BIT(0), 0,       0x0, 0,       0,       0,  0, false),
++	[RK3576_PD_NVM]		= DOMAIN_RK3576("nvm",    0x0, BIT(6),  0,      BIT(6),  0x4, BIT(2),  BIT(18), BIT(2),  0, false),
++	[RK3576_PD_SDGMAC]	= DOMAIN_RK3576("sdgmac", 0x0, BIT(7),  0,      BIT(7),  0x4, BIT(1),  BIT(17), 0x6,  0, false),
++	[RK3576_PD_AUDIO]	= DOMAIN_RK3576("audio",  0x0, BIT(8),  0,      BIT(8),  0x4, BIT(0),  BIT(16), BIT(0),  0, false),
++	[RK3576_PD_PHP]		= DOMAIN_RK3576("php",    0x0, BIT(9),  0,      BIT(9),  0x0, BIT(15), BIT(15), BIT(15),  0, false),
++	[RK3576_PD_SUBPHP]	= DOMAIN_RK3576("subphp", 0x0, BIT(10), 0,      BIT(10), 0x0, 0,       0,       0,  0, false),
++	[RK3576_PD_VOP]		= DOMAIN_RK3576("vop",    0x0, BIT(11), 0,      BIT(11), 0x0, 0x6000,  0x6000,  0x6000,  15, false),
++	[RK3576_PD_VO1]		= DOMAIN_RK3576("vo1",    0x0, BIT(14), 0,      BIT(14), 0x0, BIT(12), BIT(12), 0x7000,  0, false),
++	[RK3576_PD_VO0]		= DOMAIN_RK3576("vo0",    0x0, BIT(15), 0,      BIT(15), 0x0, BIT(11), BIT(11), 0x6800,  0, false),
++	[RK3576_PD_USB]		= DOMAIN_RK3576("usb",    0x4, BIT(0),  0,      BIT(16), 0x0, BIT(10), BIT(10), 0x6400,  0, true),
++	[RK3576_PD_VI]		= DOMAIN_RK3576("vi",     0x4, BIT(1),  0,      BIT(17), 0x0, BIT(9),  BIT(9),  BIT(9),  0, false),
++	[RK3576_PD_VEPU0]	= DOMAIN_RK3576("vepu0",  0x4, BIT(2),  0,      BIT(18), 0x0, BIT(7),  BIT(7),  0x280,  0, false),
++	[RK3576_PD_VEPU1]	= DOMAIN_RK3576("vepu1",  0x4, BIT(3),  0,      BIT(19), 0x0, BIT(8),  BIT(8),  BIT(8),  0, false),
++	[RK3576_PD_VDEC]	= DOMAIN_RK3576("vdec",   0x4, BIT(4),  0,      BIT(20), 0x0, BIT(6),  BIT(6),  BIT(6),  0, false),
++	[RK3576_PD_VPU]		= DOMAIN_RK3576("vpu",    0x4, BIT(5),  0,      BIT(21), 0x0, BIT(5),  BIT(5),  BIT(5),  0, false),
++	[RK3576_PD_NPUTOP]	= DOMAIN_RK3576("nputop", 0x4, BIT(6),  0,      BIT(22), 0x0, 0x18,    0x18,    0x18,  15, false),
++	[RK3576_PD_NPU0]	= DOMAIN_RK3576("npu0",   0x4, BIT(7),  0,      BIT(23), 0x0, BIT(1),  BIT(1),  0x1a,  0, false),
++	[RK3576_PD_NPU1]	= DOMAIN_RK3576("npu1",   0x4, BIT(8),  0,      BIT(24), 0x0, BIT(2),  BIT(2),  0x1c,  0, false),
++	[RK3576_PD_GPU]		= DOMAIN_RK3576("gpu",    0x4, BIT(9),  0,      BIT(25), 0x0, BIT(0),  BIT(0),  BIT(0),  0, false),
+ };
+ 
+ static const struct rockchip_domain_info rk3588_pm_domains[] = {
+--- a/include/uapi/drm/rocket_accel.h
++++ b/include/uapi/drm/rocket_accel.h
+@@ -15,11 +15,13 @@
+ #define DRM_ROCKET_SUBMIT			0x01
+ #define DRM_ROCKET_PREP_BO			0x02
+ #define DRM_ROCKET_FINI_BO			0x03
++#define DRM_ROCKET_GET_PARAM			0x04
+ 
+ #define DRM_IOCTL_ROCKET_CREATE_BO		DRM_IOWR(DRM_COMMAND_BASE + DRM_ROCKET_CREATE_BO, struct drm_rocket_create_bo)
+ #define DRM_IOCTL_ROCKET_SUBMIT			DRM_IOW(DRM_COMMAND_BASE + DRM_ROCKET_SUBMIT, struct drm_rocket_submit)
+ #define DRM_IOCTL_ROCKET_PREP_BO		DRM_IOW(DRM_COMMAND_BASE + DRM_ROCKET_PREP_BO, struct drm_rocket_prep_bo)
+ #define DRM_IOCTL_ROCKET_FINI_BO		DRM_IOW(DRM_COMMAND_BASE + DRM_ROCKET_FINI_BO, struct drm_rocket_fini_bo)
++#define DRM_IOCTL_ROCKET_GET_PARAM		DRM_IOWR(DRM_COMMAND_BASE + DRM_ROCKET_GET_PARAM, struct drm_rocket_get_param)
+ 
+ /**
+  * struct drm_rocket_create_bo - ioctl argument for creating Rocket BOs.
+@@ -135,6 +137,44 @@
+ 	__u64 reserved;
+ };
+ 
++/**
++ * enum drm_rocket_param - parameters for DRM_IOCTL_ROCKET_GET_PARAM
++ * @DRM_ROCKET_PARAM_HW_VERSION: an enum drm_rocket_hw_version value.
++ */
++enum drm_rocket_param {
++	DRM_ROCKET_PARAM_HW_VERSION = 0,
++};
++
++/**
++ * enum drm_rocket_hw_version - the NPU, one value per DT compatible
++ * @DRM_ROCKET_HW_RK3588: "rockchip,rk3588-rknn-core"
++ * @DRM_ROCKET_HW_RK3576: "rockchip,rk3576-rknn-core"
++ */
++enum drm_rocket_hw_version {
++	DRM_ROCKET_HW_RK3588 = 1,
++	DRM_ROCKET_HW_RK3576 = 2,
++};
++
++/**
++ * struct drm_rocket_get_param - ioctl argument for querying a parameter.
++ */
++struct drm_rocket_get_param {
++	/**
++	 * @param: Input: an enum drm_rocket_param value.
++	 */
++	__u32 param;
++
++	/**
++	 * @reserved: Reserved, must be zero.
++	 */
++	__u32 reserved;
++
++	/**
++	 * @value: Output: the value of the parameter.
++	 */
++	__u64 value;
++};
++
+ #if defined(__cplusplus)
+ }
+ #endif
