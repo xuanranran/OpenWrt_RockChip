@@ -1,0 +1,242 @@
+Subject: [PATCH] rockchip: package Bluetooth, media and NPU drivers by device
+
+Enable Realtek H5 UART support and keep the RTL8822CS Bluetooth firmware
+in the R76S image. Install media modules on matching board profiles.
+
+--- a/package/kernel/linux/modules/bluetooth.mk
++++ b/package/kernel/linux/modules/bluetooth.mk
+@@ -38,13 +38,14 @@
+ define KernelPackage/hci-uart
+   SUBMENU:=$(BLUETOOTH_MENU)
+   TITLE:=Bluetooth HCI UART support
+-  DEPENDS:=+kmod-bluetooth +kmod-btbcm
++  DEPENDS:=+kmod-bluetooth +kmod-btbcm +kmod-btrtl
+   KCONFIG:= \
+ 	CONFIG_BT_HCIUART \
+ 	CONFIG_BT_HCIUART_AML=n \
+ 	CONFIG_BT_HCIUART_BCM=y \
+ 	CONFIG_BT_HCIUART_INTEL=n \
+ 	CONFIG_BT_HCIUART_H4 \
++	CONFIG_BT_HCIUART_RTL=y \
+ 	CONFIG_BT_HCIUART_NOKIA=n
+   FILES:= \
+ 	$(LINUX_DIR)/drivers/bluetooth/hci_uart.ko
+@@ -61,7 +62,7 @@
+ define KernelPackage/btusb
+   SUBMENU:=$(BLUETOOTH_MENU)
+   TITLE:=Bluetooth HCI USB support
+-  DEPENDS:=@USB_SUPPORT +kmod-usb-core +kmod-bluetooth +kmod-btbcm +kmod-btmtk
++  DEPENDS:=@USB_SUPPORT +kmod-usb-core +kmod-bluetooth +kmod-btbcm +kmod-btmtk +kmod-btrtl
+   KCONFIG:= \
+ 	CONFIG_BT_HCIBTUSB \
+ 	CONFIG_BT_HCIBTUSB_BCM=y \
+@@ -69,8 +70,7 @@
+ 	CONFIG_BT_HCIBTUSB_RTL=y
+   FILES:= \
+ 	$(LINUX_DIR)/drivers/bluetooth/btusb.ko \
+-	$(LINUX_DIR)/drivers/bluetooth/btintel.ko \
+-	$(LINUX_DIR)/drivers/bluetooth/btrtl.ko
++	$(LINUX_DIR)/drivers/bluetooth/btintel.ko
+   AUTOLOAD:=$(call AutoProbe,btusb)
+ endef
+ 
+@@ -79,6 +79,18 @@
+ endef
+ 
+ $(eval $(call KernelPackage,btusb))
++
++
++define KernelPackage/btrtl
++  SUBMENU:=$(BLUETOOTH_MENU)
++  TITLE:=Realtek Bluetooth support
++  HIDDEN:=1
++  DEPENDS:=+kmod-bluetooth
++  KCONFIG:=CONFIG_BT_RTL
++  FILES:=$(LINUX_DIR)/drivers/bluetooth/btrtl.ko
++endef
++
++$(eval $(call KernelPackage,btrtl))
+ 
+ 
+ define KernelPackage/btbcm
+--- a/package/firmware/linux-firmware/realtek.mk
++++ b/package/firmware/linux-firmware/realtek.mk
+@@ -124,6 +124,14 @@
+ endef
+ $(eval $(call BuildPackage,rtl8723de-firmware))
+ 
++Package/rtl8822cs-firmware = $(call Package/firmware-default,Realtek RTL8822CS Bluetooth firmware,,LICENCE.rtlwifi_firmware.txt)
++define Package/rtl8822cs-firmware/install
++	$(INSTALL_DIR) $(1)/lib/firmware/rtl_bt
++	$(INSTALL_DATA) $(PKG_BUILD_DIR)/rtl_bt/rtl8822cs_fw.bin $(1)/lib/firmware/rtl_bt
++	$(INSTALL_DATA) $(PKG_BUILD_DIR)/rtl_bt/rtl8822cs_config.bin $(1)/lib/firmware/rtl_bt
++endef
++$(eval $(call BuildPackage,rtl8822cs-firmware))
++
+ Package/rtl8761a-firmware = $(call Package/firmware-default,RealTek RTL8761A firmware)
+ define Package/rtl8761a-firmware/install
+ 	$(INSTALL_DIR) $(1)/lib/firmware/rtl_bt
+--- a/target/linux/rockchip/modules.mk
++++ b/target/linux/rockchip/modules.mk
+@@ -258,6 +258,18 @@
+ $(eval $(call KernelPackage,sound-soc-rockchip-i2s-tdm))
+ 
+ 
++define KernelPackage/sound-soc-rockchip-sai
++  TITLE:=Rockchip SAI support
++  DEPENDS:=@TARGET_rockchip +kmod-sound-soc-core
++  KCONFIG:=CONFIG_SND_SOC_ROCKCHIP_SAI
++  FILES:=$(LINUX_DIR)/sound/soc/rockchip/snd-soc-rockchip-sai.ko
++  AUTOLOAD:=$(call AutoProbe,snd-soc-rockchip-sai)
++  $(call AddDepends/sound)
++endef
++
++$(eval $(call KernelPackage,sound-soc-rockchip-sai))
++
++
+ define KernelPackage/sound-soc-rockchip-spdif
+   TITLE:=Rockchip S/PDIF support
+   DEPENDS:=@TARGET_rockchip +kmod-sound-soc-core
+--- a/target/linux/rockchip/image/armv8.mk
++++ b/target/linux/rockchip/image/armv8.mk
+@@ -103,6 +103,9 @@
+ endef
+ TARGET_DEVICES += ariaboard_photonicat2
+ 
++ROCKCHIP_HDMI_PACKAGES := kmod-drm-rockchip kmod-sound-soc-simple-card
++ROCKCHIP_HDMI_I2S_TDM_PACKAGES := $(ROCKCHIP_HDMI_PACKAGES) kmod-sound-soc-rockchip-i2s-tdm
++
+ define Device/armsom_sige3
+   $(Device/rk3568)
+   DEVICE_VENDOR := ArmSoM
+@@ -110,6 +113,7 @@
+   DEVICE_DTS := rk3568-armsom-sige3
+   DEVICE_PACKAGES := kmod-brcmfmac kmod-r8125 wpad-openssl \
+ 	brcmfmac-firmware-43752-sdio brcmfmac-nvram-43752-sdio
++  DEVICE_ROOTFS_PACKAGES += $(ROCKCHIP_HDMI_I2S_TDM_PACKAGES) kmod-drm-panfrost kmod-drm-dw-hdmi-i2s-audio
+ endef
+ TARGET_DEVICES += armsom_sige3
+ 
+@@ -122,6 +126,7 @@
+   DEVICE_DTS := rk3588-armsom-sige7
+   DEVICE_PACKAGES += kmod-brcmfmac kmod-r8125 wpad-openssl \
+ 	brcmfmac-firmware-43752-pcie brcmfmac-nvram-43752-pcie
++  DEVICE_ROOTFS_PACKAGES += $(ROCKCHIP_HDMI_I2S_TDM_PACKAGES) kmod-drm-panthor kmod-video-rockchip-vdec
+ endef
+ TARGET_DEVICES += armsom_sige7
+ 
+@@ -173,6 +178,7 @@
+   DEVICE_PACKAGES := kmod-brcmfmac wpad-openssl \
+ 	brcmfmac-firmware-4356-sdio brcmfmac-nvram-4356-sdio \
+ 	kmod-button-hotplug kmod-input-adc-keys
++  DEVICE_ROOTFS_PACKAGES += $(ROCKCHIP_HDMI_PACKAGES) kmod-drm-panfrost kmod-drm-dw-hdmi-i2s-audio kmod-sound-soc-rockchip-i2s kmod-video-rockchip-vdec
+ endef
+ TARGET_DEVICES += friendlyarm_nanopc-t4
+ 
+@@ -181,6 +187,7 @@
+   DEVICE_VENDOR := FriendlyARM
+   DEVICE_MODEL := NanoPC T6
+   DEVICE_PACKAGES += kmod-button-hotplug kmod-input-adc-keys kmod-r8125
++  DEVICE_ROOTFS_PACKAGES += $(ROCKCHIP_HDMI_I2S_TDM_PACKAGES) kmod-drm-panthor kmod-video-rockchip-vdec
+ endef
+ TARGET_DEVICES += friendlyarm_nanopc-t6
+ 
+@@ -229,6 +236,7 @@
+   DEVICE_VENDOR := FriendlyARM
+   DEVICE_MODEL := NanoPi R3S
+   DEVICE_PACKAGES := kmod-r8169
++  DEVICE_ROOTFS_PACKAGES += kmod-drm-panfrost
+ endef
+ TARGET_DEVICES += friendlyarm_nanopi-r3s
+ 
+@@ -262,6 +270,7 @@
+   DEVICE_VENDOR := FriendlyARM
+   DEVICE_MODEL := NanoPi R5C
+   DEVICE_PACKAGES := kmod-button-hotplug kmod-input-adc-keys kmod-r8125 kmod-rtw88-8822ce rtl8822ce-firmware wpad-openssl
++  DEVICE_ROOTFS_PACKAGES += $(ROCKCHIP_HDMI_I2S_TDM_PACKAGES) kmod-drm-panfrost kmod-drm-dw-hdmi-i2s-audio
+ endef
+ TARGET_DEVICES += friendlyarm_nanopi-r5c
+ 
+@@ -270,6 +279,7 @@
+   DEVICE_VENDOR := FriendlyARM
+   DEVICE_MODEL := NanoPi R5S
+   DEVICE_PACKAGES := kmod-button-hotplug kmod-input-adc-keys kmod-r8125
++  DEVICE_ROOTFS_PACKAGES += $(ROCKCHIP_HDMI_I2S_TDM_PACKAGES) kmod-drm-panfrost kmod-drm-dw-hdmi-i2s-audio
+ endef
+ TARGET_DEVICES += friendlyarm_nanopi-r5s
+ 
+@@ -278,6 +288,7 @@
+   DEVICE_VENDOR := FriendlyARM
+   DEVICE_MODEL := NanoPi R6C
+   DEVICE_PACKAGES += kmod-button-hotplug kmod-input-adc-keys kmod-r8125
++  DEVICE_ROOTFS_PACKAGES += kmod-drm-panthor kmod-video-rockchip-vdec kmod-drm-rocket
+ endef
+ TARGET_DEVICES += friendlyarm_nanopi-r6c
+ 
+@@ -286,6 +297,7 @@
+   DEVICE_VENDOR := FriendlyARM
+   DEVICE_MODEL := NanoPi R6S
+   DEVICE_PACKAGES += kmod-button-hotplug kmod-input-adc-keys kmod-r8125
++  DEVICE_ROOTFS_PACKAGES += kmod-drm-panthor kmod-video-rockchip-vdec kmod-drm-rocket
+ endef
+ TARGET_DEVICES += friendlyarm_nanopi-r6s
+ 
+@@ -298,7 +310,9 @@
+   KERNEL_DEPENDS += $$(KDIR)/image-rk3576-nanopi-r76s.dtb
+   BOOT_SCRIPT := nanopi-r76s
+   IMAGE/sysupgrade.img.gz = boot-nanopi-r76s | boot-script $$(BOOT_SCRIPT) | $$(BOOT_FLOW) | gzip | append-metadata
+-  DEVICE_ROOTFS_PACKAGES := kmod-r8125 kmod-rtl8822cs -kmod-r8169 -kmod-rtw88-8822cs
++  DEVICE_ROOTFS_PACKAGES := kmod-r8125 kmod-rtl8822cs -kmod-r8169 -kmod-rtw88-8822cs \
++	kmod-hci-uart rtl8822cs-firmware $(ROCKCHIP_HDMI_PACKAGES) kmod-sound-soc-rockchip-sai \
++	kmod-drm-panfrost kmod-video-rockchip-vdec kmod-drm-rocket kmod-tcp-brutal
+   DEVICE_PACKAGES += kmod-button-hotplug kmod-input-adc-keys kmod-r8125 kmod-rtw88-8822cs wpad-openssl
+ endef
+ TARGET_DEVICES += friendlyarm_nanopi-r76s
+@@ -345,6 +359,7 @@
+   DEVICE_VENDOR := Lunzn
+   DEVICE_MODEL := FastRhino R66S
+   DEVICE_PACKAGES := kmod-r8125
++  DEVICE_ROOTFS_PACKAGES += kmod-drm-panfrost
+ endef
+ TARGET_DEVICES += lunzn_fastrhino-r66s
+ 
+@@ -354,6 +369,7 @@
+   DEVICE_VENDOR := Lunzn
+   DEVICE_MODEL := FastRhino R68S
+   DEVICE_PACKAGES := kmod-r8125
++  DEVICE_ROOTFS_PACKAGES += kmod-drm-panfrost
+ endef
+ TARGET_DEVICES += lunzn_fastrhino-r68s
+ 
+@@ -521,6 +537,7 @@
+   DEVICE_MODEL := ROCK 5A
+   UBOOT_DEVICE_NAME := rock5a-rk3588s
+   DEVICE_PACKAGES += blkdiscard block-mount kmod-ata-ahci kmod-hwmon-pwmfan kmod-nvme kmod-r8125 kmod-rtw89-8852be wpad-openssl
++  DEVICE_ROOTFS_PACKAGES += kmod-drm-rockchip kmod-drm-panthor kmod-video-rockchip-vdec
+ endef
+ TARGET_DEVICES += radxa_rock-5a
+ 
+@@ -530,6 +547,7 @@
+   DEVICE_MODEL := ROCK 5B
+   UBOOT_DEVICE_NAME := rock5b-rk3588
+   DEVICE_PACKAGES += blkdiscard block-mount kmod-hwmon-pwmfan kmod-nvme kmod-r8125 kmod-rtw89-8852be wpad-openssl
++  DEVICE_ROOTFS_PACKAGES += $(ROCKCHIP_HDMI_I2S_TDM_PACKAGES) kmod-drm-panthor kmod-video-rockchip-vdec kmod-drm-rocket
+ endef
+ TARGET_DEVICES += radxa_rock-5b
+ 
+@@ -643,6 +661,7 @@
+   $(Device/rk3588s)
+   DEVICE_VENDOR := Xunlong
+   DEVICE_MODEL := Orange Pi 5
++  DEVICE_ROOTFS_PACKAGES += $(ROCKCHIP_HDMI_I2S_TDM_PACKAGES) kmod-drm-panthor kmod-video-rockchip-vdec kmod-drm-rocket
+ endef
+ TARGET_DEVICES += xunlong_orangepi-5
+ 
+@@ -651,6 +670,7 @@
+   DEVICE_VENDOR := Xunlong
+   DEVICE_MODEL := Orange Pi 5 Plus
+   DEVICE_PACKAGES += kmod-r8125
++  DEVICE_ROOTFS_PACKAGES += $(ROCKCHIP_HDMI_I2S_TDM_PACKAGES) kmod-drm-panthor kmod-video-rockchip-vdec kmod-drm-rocket
+ endef
+ TARGET_DEVICES += xunlong_orangepi-5-plus
+ 
