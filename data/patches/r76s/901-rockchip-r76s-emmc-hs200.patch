@@ -1,0 +1,31 @@
+Subject: [PATCH] rockchip: nanopi-r76s: use HS200 for eMMC in U-Boot
+
+Select HS200 in the board's U-Boot and SPL configurations and advertise
+it in the U-Boot device tree. The Linux device tree retains HS400.
+
+Reference: https://github.com/sbwml/package_boot_uboot-rockchip/blob/f4e9bc7b649d80e8b01fd493918999ffffc1cac2/patches/900-board-rockchip-Add-support-for-FriendlyARM-NanoPi-R7.patch
+---
+diff --git a/arch/arm/dts/rk3576-nanopi-r76s-u-boot.dtsi b/arch/arm/dts/rk3576-nanopi-r76s-u-boot.dtsi
+new file mode 100644
+--- /dev/null
++++ b/arch/arm/dts/rk3576-nanopi-r76s-u-boot.dtsi
+@@ -0,0 +1,9 @@
++// SPDX-License-Identifier: GPL-2.0-only
++
++#include "rk3576-u-boot.dtsi"
++
++&sdhci {
++	/delete-property/ mmc-hs400-1_8v;
++	/delete-property/ mmc-hs400-enhanced-strobe;
++	mmc-hs200-1_8v;
++};
+diff --git a/configs/nanopi-r76s-rk3576_defconfig b/configs/nanopi-r76s-rk3576_defconfig
+--- a/configs/nanopi-r76s-rk3576_defconfig
++++ b/configs/nanopi-r76s-rk3576_defconfig
+@@ -38,4 +38,6 @@
+ CONFIG_SUPPORT_EMMC_RPMB=y
++CONFIG_MMC_HS200_SUPPORT=y
++CONFIG_SPL_MMC_HS200_SUPPORT=y
+ CONFIG_MMC_DW=y
+ CONFIG_MMC_DW_ROCKCHIP=y
+ CONFIG_MMC_SDHCI=y

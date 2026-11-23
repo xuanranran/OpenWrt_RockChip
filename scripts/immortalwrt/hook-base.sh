@@ -11,6 +11,11 @@ sed -i 's/-flto=auto/-flto=jobserver/g' include/package.mk
 curl -s $mirror/openwrt/patch/generic-25.12/0005-kernel-Add-support-for-llvm-clang-compiler.patch | patch -p1
 patch --batch --forward -p1 < ../data/patches/kernel/0006-build-kernel-add-out-of-tree-kernel-config.patch
 
+# NanoPi R76S boot image, network drivers and U-Boot eMMC mode
+patch --batch --forward --fuzz=0 -p1 < "$GITHUB_WORKSPACE/data/patches/r76s/001-rockchip-r76s-image-and-drivers.patch" || exit 1
+install -m 0644 "$GITHUB_WORKSPACE/data/patches/r76s/901-rockchip-r76s-emmc-hs200.patch" \
+    package/boot/uboot-rockchip/patches/901-rockchip-r76s-emmc-hs200.patch || exit 1
+
 # add source mirror
 sed -i '/"@OPENWRT": \[/a\\t\t"https://source.cooluc.com",' scripts/projectsmirrors.json
 
