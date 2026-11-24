@@ -2,6 +2,8 @@ Subject: [PATCH] rockchip: package Bluetooth, media and NPU drivers by device
 
 Enable Realtek H5 UART support and keep the RTL8822CS Bluetooth firmware
 in the R76S image. Install media modules on matching board profiles.
+Keep the USBDP PHY's AUX bridge in a separate package so its default
+installation does not also install the Rockchip display and HDMI audio.
 
 --- a/package/kernel/linux/modules/bluetooth.mk
 +++ b/package/kernel/linux/modules/bluetooth.mk
@@ -78,7 +80,43 @@ in the R76S image. Install media modules on matching board profiles.
  	$(INSTALL_DIR) $(1)/lib/firmware/rtl_bt
 --- a/target/linux/rockchip/modules.mk
 +++ b/target/linux/rockchip/modules.mk
-@@ -258,6 +258,18 @@
+@@ -3,14 +3,25 @@
++define KernelPackage/drm-aux-bridge
++  SUBMENU:=$(VIDEO_MENU)
++  TITLE:=DRM DisplayPort AUX bridge support
++  HIDDEN:=1
++  DEPENDS:=@TARGET_rockchip +kmod-drm-kms-helper
++  KCONFIG:=CONFIG_DRM_AUX_BRIDGE
++  FILES:=$(LINUX_DIR)/drivers/gpu/drm/bridge/aux-bridge.ko
++endef
++
++$(eval $(call KernelPackage,drm-aux-bridge))
++
++
+ define KernelPackage/drm-rockchip
+   SUBMENU:=$(VIDEO_MENU)
+   TITLE:=Rockchip DRM support
+-  DEPENDS:=@TARGET_rockchip video-support +kmod-drm-kms-helper \
++  DEPENDS:=@TARGET_rockchip video-support +kmod-drm-aux-bridge +kmod-drm-kms-helper \
+ 	+kmod-drm-dma-helper +kmod-drm-display-helper +kmod-drm-analogix-dp \
+ 	+kmod-drm-dw-dp +kmod-drm-dw-hdmi +kmod-drm-dw-hdmi-cec +kmod-drm-dw-hdmi-qp \
+ 	+kmod-drm-dw-mipi-dsi +kmod-drm-dw-mipi-dsi2
+   KCONFIG:= \
+ 	CONFIG_DRM_ROCKCHIP \
+ 	CONFIG_DRM_BRIDGE=y \
+-	CONFIG_DRM_AUX_BRIDGE \
+ 	CONFIG_DRM_LOAD_EDID_FIRMWARE=y \
+ 	CONFIG_DRM_PANEL=y \
+ 	CONFIG_DRM_PANEL_BRIDGE=y \
+@@ -31,7 +42,6 @@
+ 	CONFIG_PHY_ROCKCHIP_INNO_HDMI \
+ 	CONFIG_PHY_ROCKCHIP_SAMSUNG_HDPTX
+   FILES:= \
+-	$(LINUX_DIR)/drivers/gpu/drm/bridge/aux-bridge.ko \
+ 	$(LINUX_DIR)/drivers/gpu/drm/rockchip/rockchipdrm.ko \
+ 	$(LINUX_DIR)/drivers/phy/rockchip/phy-rockchip-inno-hdmi.ko \
+ 	$(LINUX_DIR)/drivers/phy/rockchip/phy-rockchip-samsung-hdptx.ko
+@@ -258,6 +268,18 @@
  $(eval $(call KernelPackage,sound-soc-rockchip-i2s-tdm))
  
  
@@ -97,6 +135,15 @@ in the R76S image. Install media modules on matching board profiles.
  define KernelPackage/sound-soc-rockchip-spdif
    TITLE:=Rockchip S/PDIF support
    DEPENDS:=@TARGET_rockchip +kmod-sound-soc-core
+@@ -356,7 +378,7 @@
+ define KernelPackage/phy-rockchip-usbdp
+   SUBMENU:=$(USB_MENU)
+   TITLE:=Rockchip USBDP COMBO PHY Driver
+-  DEPENDS:=@TARGET_rockchip_armv8 +PACKAGE_kmod-drm-rockchip:kmod-drm-rockchip
++  DEPENDS:=@TARGET_rockchip_armv8 +PACKAGE_kmod-drm-aux-bridge:kmod-drm-aux-bridge
+   KCONFIG:=CONFIG_PHY_ROCKCHIP_USBDP
+   FILES:=$(LINUX_DIR)/drivers/phy/rockchip/phy-rockchip-usbdp.ko
+   AUTOLOAD:=$(call AutoProbe,phy-rockchip-usbdp,1)
 --- a/target/linux/rockchip/image/armv8.mk
 +++ b/target/linux/rockchip/image/armv8.mk
 @@ -103,6 +103,9 @@
