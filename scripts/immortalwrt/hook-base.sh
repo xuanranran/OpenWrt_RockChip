@@ -11,6 +11,11 @@ sed -i 's/-flto=auto/-flto=jobserver/g' include/package.mk
 curl -s $mirror/openwrt/patch/generic-25.12/0005-kernel-Add-support-for-llvm-clang-compiler.patch | patch -p1
 patch --batch --forward -p1 < ../data/patches/kernel/0006-build-kernel-add-out-of-tree-kernel-config.patch
 
+# Optional driver and media packages for the matching board profiles
+patch --batch --forward --fuzz=0 -p1 < "$GITHUB_WORKSPACE/data/patches/r76s/001-rockchip-device-rootfs-packages.patch" || exit 1
+install -D -m 0644 "$GITHUB_WORKSPACE/data/patches/r76s/tcp-brutal.mk" \
+    package/kernel/tcp-brutal/Makefile || exit 1
+
 # add source mirror
 sed -i '/"@OPENWRT": \[/a\\t\t"https://source.cooluc.com",' scripts/projectsmirrors.json
 
@@ -206,7 +211,7 @@ pushd target/linux/generic/backport-6.18
     curl -Os $mirror/openwrt/patch/kernel-6.18/bbr3/010-bbr3-0012-net-tcp_bbr-v2-record-app-limited-status-of-TLP-repa.patch
     curl -Os $mirror/openwrt/patch/kernel-6.18/bbr3/010-bbr3-0013-net-tcp_bbr-v2-inform-CC-module-of-losses-repaired-b.patch
     curl -Os $mirror/openwrt/patch/kernel-6.18/bbr3/010-bbr3-0014-net-tcp_bbr-v2-introduce-is_acking_tlp_retrans_seq-i.patch
-    curl -Os $mirror/openwrt/patch/kernel-6.18/bbr3/010-bbr3-0015-tcp-introduce-per-route-feature-RTAX_FEATURE_ECN_LOW.patch
+    install -m 0644 "$GITHUB_WORKSPACE/data/patches/kernel/010-bbr3-0015-tcp-introduce-per-route-feature-RTAX_FEATURE_ECN_LOW.patch" . || exit 1
     curl -Os $mirror/openwrt/patch/kernel-6.18/bbr3/010-bbr3-0016-net-tcp_bbr-v3-update-TCP-bbr-congestion-control-mod.patch
     curl -Os $mirror/openwrt/patch/kernel-6.18/bbr3/010-bbr3-0017-net-tcp_bbr-v3-ensure-ECN-enabled-BBR-flows-set-ECT-.patch
     curl -Os $mirror/openwrt/patch/kernel-6.18/bbr3/010-bbr3-0018-tcp-export-TCPI_OPT_ECN_LOW-in-tcp_info-tcpi_options.patch
